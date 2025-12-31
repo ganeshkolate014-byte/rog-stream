@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center h-full gap-8">
             
             {/* Left: Logo & Links - Fixed Flex */}
-            <div className="flex items-center gap-10 flex-shrink-0">
+            <div className="flex items-center gap-11 flex-shrink-0">
               <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200">
                 <Home className="w-7 h-7" strokeWidth={2.0} />
               </Link>
@@ -87,7 +87,7 @@ export const Navbar: React.FC = () => {
 
             {/* Center: Search - Stretches to fill space */}
             <div className="hidden md:flex flex-1 items-center justify-end max-w-4xl mx-auto">
-              <form onSubmit={handleSearch} className="w-full relative group mt-1">
+              <form onSubmit={handleSearch} className="w-full relative group mt-2">
                 <div className={`relative flex items-center border rounded-none px-4 py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
                   <Search className="w-4 h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
