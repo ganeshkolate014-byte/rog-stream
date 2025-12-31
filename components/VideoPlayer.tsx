@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Monitor, Globe, Info, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Monitor, Globe, Info, AlertTriangle, Captions } from 'lucide-react';
 import { Episode } from '../types';
 
 interface VideoPlayerProps {
@@ -19,6 +19,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const [category, setCategory] = useState<'sub' | 'dub'>('sub');
   const [server, setServer] = useState<'vidWish' | 'megaPlay'>('megaPlay');
+  const [enableCC, setEnableCC] = useState(false);
 
   // Helper to extract numeric ID (e.g., "monster-37$episode$1046" -> "1046")
   const extractNumericId = (id: string) => {
@@ -52,14 +53,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div className="flex flex-col gap-0 w-full">
-      {/* Main Player Area with ROG Borders */}
+      {/* Main Player Area */}
       <div className="relative w-full aspect-video bg-black border border-dark-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden group z-10">
-        {/* Corner Accents */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand-400 z-20 opacity-50 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-brand-400 z-20 opacity-50 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-brand-400 z-20 opacity-50 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand-400 z-20 opacity-50 pointer-events-none"></div>
-
         <iframe
           key={`${server}-${category}-${episodeId}`}
           src={src}
@@ -88,7 +83,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     onClick={() => setServer("megaPlay")}
                     className={`px-4 py-2 text-xs font-bold uppercase transition-all -skew-x-12 border min-w-[100px] ${
                         server === "megaPlay"
-                        ? 'bg-brand-400 text-black border-brand-400 shadow-[0_0_15px_rgba(246,195,67,0.4)]'
+                        ? 'bg-brand-400 text-black border-brand-400'
                         : 'bg-dark-800 text-zinc-500 border-dark-600 hover:text-white hover:border-zinc-500'
                     }`}
                 >
@@ -98,7 +93,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     onClick={() => setServer("vidWish")}
                     className={`px-4 py-2 text-xs font-bold uppercase transition-all -skew-x-12 border min-w-[100px] ${
                         server === "vidWish"
-                        ? 'bg-brand-400 text-black border-brand-400 shadow-[0_0_15px_rgba(246,195,67,0.4)]'
+                        ? 'bg-brand-400 text-black border-brand-400'
                         : 'bg-dark-800 text-zinc-500 border-dark-600 hover:text-white hover:border-zinc-500'
                     }`}
                 >
@@ -126,6 +121,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         <span className="skew-x-12 block">{type}</span>
                     </button>
                 ))}
+             </div>
+          </div>
+
+           {/* CC / Subtitles Toggle */}
+           <div className="flex flex-col gap-2 items-center md:items-start w-full md:w-auto">
+             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <Captions className="w-3 h-3" /> Captions
+             </span>
+             <div className="flex gap-2">
+                <button
+                    onClick={() => setEnableCC(!enableCC)}
+                    className={`px-4 py-2 text-xs font-bold uppercase transition-all -skew-x-12 border min-w-[80px] ${
+                        enableCC
+                        ? 'bg-brand-400 text-black border-brand-400'
+                        : 'bg-dark-800 text-zinc-500 border-dark-600 hover:text-white hover:border-zinc-500'
+                    }`}
+                >
+                    <span className="skew-x-12 block">{enableCC ? 'ON' : 'OFF'}</span>
+                </button>
              </div>
           </div>
 

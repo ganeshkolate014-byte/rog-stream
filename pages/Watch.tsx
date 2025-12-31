@@ -138,9 +138,6 @@ export const Watch: React.FC = () => {
              </div>
              
              <div className="flex items-center gap-2">
-                 <span className="bg-brand-400 text-black text-[10px] font-black px-2 py-1 uppercase skew-x-[-10deg]">
-                    <span className="skew-x-[10deg]">ROG PLAYER</span>
-                 </span>
                  <span className="text-green-500 text-[10px] font-bold uppercase border border-green-500/30 px-2 py-1 bg-green-500/10">ONLINE</span>
              </div>
         </div>

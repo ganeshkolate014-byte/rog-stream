@@ -4,7 +4,7 @@ import { useApi, constructUrl } from '../services/api';
 import { HomeData, Anime, HistoryItem } from '../types';
 import { Hero } from '../components/Hero';
 import { AnimeCard } from '../components/AnimeCard';
-import { HeroSkeleton, AnimeCardSkeleton } from '../components/Skeletons';
+import { HomeSkeleton } from '../components/Skeletons';
 import { ChevronRight, AlertCircle, Play } from 'lucide-react';
 
 const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'portrait' | 'landscape'; link?: string; subtitle?: string }> = ({ 
@@ -123,10 +123,9 @@ const ContinueWatchingSection: React.FC = () => {
 };
 
 export const Home: React.FC = () => {
-  // Use constructUrl('home') to get the URL defined in DEFAULT_CONFIG (supports absolute URLs)
   const { data, isLoading, isError, error } = useApi<HomeData>(constructUrl('home'));
 
-  if (isLoading) return <div className="min-h-screen bg-dark-950"><HeroSkeleton /></div>;
+  if (isLoading) return <HomeSkeleton />;
   if (isError) return (
       <div className="h-screen flex flex-col items-center justify-center bg-dark-950 text-center px-4">
         <AlertCircle className="w-16 h-16 text-brand-400 mb-4 opacity-50" />
@@ -156,7 +155,7 @@ export const Home: React.FC = () => {
 
         {/* Latest Releases */}
         <HorizontalSection 
-            title="Latest on ROG Stream" 
+            title="Latest Updates" 
             subtitle="Fresh Releases"
             items={latestEpisode} 
             link="/animes/recently-updated"

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ROG Stream</title>
+    <title>Anime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -15,7 +15,7 @@
                 100: '#ffe4e6',
                 200: '#fecdd3',
                 300: '#fda4af',
-                400: '#ff0033', // ROG Red
+                400: '#ff0033', // Brand Red
                 500: '#e11d48',
                 600: '#be123c',
                 700: '#9f1239',
@@ -42,7 +42,6 @@
             },
             backgroundImage: {
               'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-              'rog-mesh': 'repeating-linear-gradient(45deg, #111 0px, #111 2px, #000 2px, #000 8px)',
             }
           }
         }
@@ -82,7 +81,7 @@
           scrollbar-width: none;
       }
       
-      .clip-rog {
+      .clip-brand {
         clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       }
 
@@ -114,6 +113,30 @@
       @keyframes keyframes-blink {
         0% { opacity: 0.3; transform: scale(0.5) rotate(5deg); }
         50% { opacity: 1; transform: scale(1); }
+      }
+
+      /* Skeleton Shimmer Effect */
+      @keyframes shimmer {
+        0% {
+          background-position: -1000px 0;
+        }
+        100% {
+          background-position: 1000px 0;
+        }
+      }
+
+      .skeleton-shimmer {
+        background: #111111;
+        background-image: linear-gradient(
+          to right,
+          #111111 0%,
+          #27272a 20%,
+          #111111 40%,
+          #111111 100%
+        );
+        background-repeat: no-repeat;
+        background-size: 800px 100%;
+        animation: shimmer 1.5s infinite linear forwards;
       }
     </style>
 <script type="importmap">

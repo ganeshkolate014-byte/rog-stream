@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
@@ -19,6 +19,10 @@ const ScrollToTop = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />
@@ -49,13 +53,13 @@ const App: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-50"></div>
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-black text-white mb-4 font-display italic tracking-tighter">
-              ROG <span className="text-brand-400">STREAM</span>
+              <span className="text-brand-400">STREAMING</span>
             </h2>
             <p className="text-zinc-500 text-sm max-w-md mx-auto mb-8 font-mono">
-              ELITE GAMING GRADE ANIME STREAMING.
+              PREMIUM ANIME EXPERIENCE.
             </p>
             <div className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} ROG STREAM SYSTEM. ALL RIGHTS RESERVED.
+              &copy; {new Date().getFullYear()} ALL RIGHTS RESERVED.
             </div>
           </div>
         </footer>

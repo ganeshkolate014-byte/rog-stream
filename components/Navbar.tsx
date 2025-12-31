@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, Bell, Compass, Calendar, Flame, Settings, LogIn, Cpu } from 'lucide-react';
+import { Search, Menu, X, User, Bell, Compass, Calendar, Flame, Settings, LogIn, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar: React.FC = () => {
@@ -60,25 +60,13 @@ export const Navbar: React.FC = () => {
         {/* Gradient Overlay for Top Visibility (Always visible slightly for contrast) */}
         <div className={`absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${isScrolled ? 'opacity-0' : 'opacity-100'}`} />
 
-        {/* ROG Decorative Top Line with Scanline */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-80 shadow-[0_0_10px_#ff0033] z-20"></div>
-
         <div className="relative z-20 max-w-[1600px] mx-auto px-4 md:px-8 h-full">
-          <div className="flex items-center justify-between h-full">
+          <div className="flex items-center h-full gap-8">
             
-            {/* Left: Logo & Links */}
-            <div className="flex items-center gap-12">
-              <Link to="/" className="group relative flex items-center gap-3">
-                {/* ROG Logo Icon */}
-                <div className="w-10 h-10 bg-brand-400 transform -skew-x-12 flex items-center justify-center overflow-hidden border-2 border-white/10 shadow-[0_0_15px_rgba(255,0,51,0.5)]">
-                    <Cpu className="w-6 h-6 text-black skew-x-12" />
-                </div>
-                <div className="font-display text-3xl md:text-4xl font-black tracking-tighter italic uppercase text-white flex flex-col leading-none">
-                  <span>ROG</span>
-                  <span className="text-brand-400 text-sm tracking-[0.3em] -mt-1">STREAM</span>
-                </div>
-                {/* Logo Glow */}
-                <div className="absolute -inset-4 bg-brand-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Left: Logo & Links - Fixed Flex */}
+            <div className="flex items-center gap-12 flex-shrink-0">
+              <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200">
+                <Home className="w-7 h-7" strokeWidth={2.5} />
               </Link>
 
               {/* Desktop Navigation */}
@@ -97,13 +85,11 @@ export const Navbar: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: Search & Actions */}
-            <div className="flex items-center gap-4 md:gap-6">
-              
-              {/* Desktop Search - Clean Matte Look (No Glow) */}
-              <form onSubmit={handleSearch} className="hidden md:block relative group mt-4">
-                <div className={`relative flex items-center border rounded-none px-4 py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-64 group-focus-within:w-80 ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
-                  <Search className="w-4 h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors" />
+            {/* Center: Search - Stretches to fill space */}
+            <div className="hidden md:flex flex-1 items-center justify-end max-w-4xl mx-auto">
+              <form onSubmit={handleSearch} className="w-full relative group mt-4">
+                <div className={`relative flex items-center border rounded-none px-4 py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
+                  <Search className="w-4 h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
                     type="text"
                     value={query}
@@ -116,7 +102,11 @@ export const Navbar: React.FC = () => {
                   <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-brand-400 opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
                 </div>
               </form>
+            </div>
 
+            {/* Right: Actions - Fixed Flex */}
+            <div className="flex items-center gap-4 md:gap-6 flex-shrink-0 ml-auto md:ml-0">
+              
               {/* Icons */}
               <div className="hidden md:flex items-center gap-6">
                 <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group">
@@ -172,7 +162,7 @@ export const Navbar: React.FC = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-400/10 blur-3xl pointer-events-none"></div>
 
                 <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
-                  <span className="text-3xl font-display font-black text-white italic tracking-tighter">ROG <span className="text-brand-400">MENU</span></span>
+                  <span className="text-3xl font-display font-black text-white italic tracking-tighter">MENU</span>
                   <button 
                     onClick={() => setIsMobileOpen(false)}
                     className="p-2 text-zinc-400 hover:text-brand-400 transition-colors border border-white/10 hover:border-brand-400"
@@ -229,7 +219,7 @@ export const Navbar: React.FC = () => {
                 <div className="mt-12 p-4 bg-brand-400/10 border border-brand-400/30 rounded-none skew-x-[-5deg]">
                     <p className="text-brand-400 text-xs font-bold uppercase tracking-widest text-center flex items-center justify-center gap-2">
                         <span className="w-2 h-2 bg-brand-400 animate-pulse shadow-[0_0_5px_#ff0033]"></span>
-                        ROG SYSTEM ONLINE
+                        SYSTEM ONLINE
                     </p>
                 </div>
 
