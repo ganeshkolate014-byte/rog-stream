@@ -64,9 +64,9 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center h-full gap-8">
             
             {/* Left: Logo & Links - Fixed Flex */}
-            <div className="flex items-center gap-12 flex-shrink-0">
+            <div className="flex items-center gap-10 flex-shrink-0">
               <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200">
-                <Home className="w-7 h-7" strokeWidth={2.5} />
+                <Home className="w-7 h-7" strokeWidth={2.0} />
               </Link>
 
               {/* Desktop Navigation */}
