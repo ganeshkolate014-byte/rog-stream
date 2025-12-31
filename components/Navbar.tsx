@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="INITIATE SEARCH..."
+                    placeholder="SEARCH"
                     className="bg-transparent border-none outline-none text-base text-white placeholder-zinc-600 ml-3 w-full skew-x-[12deg] font-mono tracking-wider uppercase"
                   />
                   {/* Subtle Corner Accents */}
