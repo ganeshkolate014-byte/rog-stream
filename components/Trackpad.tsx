@@ -63,11 +63,13 @@ export const Trackpad: React.FC = () => {
   }, [cursorPos, isEnabled]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation(); // Stop event from passing through to elements behind
     setIsDragging(true);
     setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
     if (!lastTouch) return;
     
     const currentX = e.touches[0].clientX;
@@ -84,12 +86,15 @@ export const Trackpad: React.FC = () => {
     setLastTouch({ x: currentX, y: currentY });
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
     setIsDragging(false);
     setLastTouch(null);
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     const cursor = document.getElementById('virtual-cursor');
     if(cursor) cursor.style.display = 'none';
     const element = document.elementFromPoint(cursorPos.x, cursorPos.y);
@@ -129,7 +134,7 @@ export const Trackpad: React.FC = () => {
 
       {/* Trackpad Area */}
       <div className="fixed bottom-6 right-6 z-[9000] flex flex-col items-end gap-2 touch-none">
-         <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest bg-black/80 px-2 py-1 border border-brand-400/30 rounded-sm">
+         <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest bg-black/80 px-2 py-1 border border-brand-400/30 rounded-sm pointer-events-none">
             Mouse Mode Active
          </div>
          
@@ -153,6 +158,7 @@ export const Trackpad: React.FC = () => {
                 <button 
                     className="flex-1 bg-white/5 active:bg-brand-400/20 transition-colors flex items-center justify-center text-xs font-bold text-zinc-400 uppercase tracking-wider hover:text-white"
                     onClick={handleClick}
+                    onTouchEnd={(e) => e.stopPropagation()} // Prevent ghost touches here too
                 >
                     Left Click
                 </button>

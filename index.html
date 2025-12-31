@@ -85,24 +85,56 @@
       .clip-rog {
         clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       }
+
+      /* Custom Loader */
+      .loader {
+        --color: #ff0033;
+        --size: 70px;
+        width: var(--size);
+        height: var(--size);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+      }
+
+      .loader span {
+        width: 100%;
+        height: 100%;
+        background-color: var(--color);
+        animation: keyframes-blink 0.6s alternate infinite linear;
+      }
+
+      .loader span:nth-child(1) { animation-delay: 0ms; }
+      .loader span:nth-child(2) { animation-delay: 200ms; }
+      .loader span:nth-child(3) { animation-delay: 300ms; }
+      .loader span:nth-child(4) { animation-delay: 400ms; }
+      .loader span:nth-child(5) { animation-delay: 500ms; }
+      .loader span:nth-child(6) { animation-delay: 600ms; }
+
+      @keyframes keyframes-blink {
+        0% { opacity: 0.3; transform: scale(0.5) rotate(5deg); }
+        50% { opacity: 1; transform: scale(1); }
+      }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
     "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "hls.js": "https://esm.sh/hls.js@^1.6.15",
-    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.15",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "axios": "https://esm.sh/axios@^1.13.2",
-    "framer-motion": "https://esm.sh/framer-motion@^12.23.26"
+    "framer-motion": "https://esm.sh/framer-motion@^12.23.26",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.16",
+    "vite": "https://esm.sh/vite@^7.3.0"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

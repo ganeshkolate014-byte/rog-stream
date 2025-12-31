@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Anime } from '../types';
-import { Play, Clock, MoreVertical } from 'lucide-react';
+import { Play, MoreVertical } from 'lucide-react';
 
 interface AnimeCardProps {
   anime: Anime;
@@ -12,44 +12,42 @@ interface AnimeCardProps {
 export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'portrait' }) => {
   if (!anime) return null;
 
-  // Mock data for UI demonstration since API might not have these specific fields for all endpoints
   const isDub = anime.episodes?.dub && anime.episodes.dub > 0;
   const isSub = anime.episodes?.sub && anime.episodes.sub > 0;
   const subDubText = isSub && isDub ? 'Sub | Dub' : isSub ? 'Sub' : 'Dub';
   
-  // Mock progress for landscape mode
   const progress = Math.floor(Math.random() * 80) + 10;
   const timeLeft = `${15 + Math.floor(Math.random() * 10)}m left`;
 
   if (variant === 'landscape') {
     return (
-      <div className="w-[280px] md:w-[320px] flex-shrink-0 group">
+      <div className="w-[280px] md:w-[320px] flex-shrink-0 group/card relative">
         <Link to={`/watch/${encodeURIComponent(anime.id)}`} className="block">
           {/* Thumbnail Container */}
-          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover:border-brand-400/50 transition-all">
+          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover/card:border-brand-400/50 transition-all">
             <img
               src={anime.banner || anime.image || anime.poster}
               alt={anime.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
               loading="lazy"
             />
             
-            {/* Gradient for text readability */}
+            {/* Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
             
-            {/* Play Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-               <div className="w-10 h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-brand-400 group-hover:border-brand-400 transition-all">
-                  <Play className="w-4 h-4 fill-white text-white group-hover:fill-black group-hover:text-black ml-0.5" />
+            {/* Play Overlay - Scoped to group/card */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/card:opacity-100 group-hover/card:bg-black/40 transition-all duration-300">
+               <div className="w-10 h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center scale-75 group-hover/card:scale-110 group-hover/card:bg-brand-400 group-hover/card:border-brand-400 transition-all duration-300">
+                  <Play className="w-4 h-4 fill-white text-white group-hover/card:fill-black group-hover/card:text-black ml-0.5" />
                </div>
             </div>
 
-            {/* Overlaid Text Content */}
+            {/* Overlaid Text */}
             <div className="absolute bottom-3 left-3 right-20">
               <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5 line-clamp-1">
                   {anime.title}
               </h4>
-              <h3 className="text-sm font-bold text-white group-hover:text-brand-400 transition-colors line-clamp-1 leading-tight">
+              <h3 className="text-sm font-bold text-white group-hover/card:text-brand-400 transition-colors line-clamp-1 leading-tight">
                   Episode {anime.episodes?.sub || anime.episodes?.eps || '1'}
               </h3>
             </div>
@@ -71,15 +69,15 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
 
   // Portrait Mode (Default)
   return (
-    <div className="w-[160px] md:w-[200px] flex-shrink-0 group">
+    <div className="w-[160px] md:w-[200px] flex-shrink-0 group/card relative">
       <Link to={`/anime/${anime.id}`} className="block relative">
         {/* Card Container */}
-        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 mb-3 transition-all duration-300 rounded-sm group-hover:shadow-[0_0_20px_rgba(246,195,67,0.1)]">
+        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 mb-3 transition-all duration-300 rounded-sm group-hover/card:shadow-[0_0_20px_rgba(246,195,67,0.1)]">
           
           <img
             src={anime.poster || anime.image} 
             alt={anime.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
             loading="lazy"
           />
           
@@ -93,15 +91,17 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
              </div>
           )}
           
-          {/* Hover Overlay (Minimal) */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <Play className="w-12 h-12 text-brand-400 fill-brand-400 drop-shadow-lg transform scale-50 group-hover:scale-100 transition-transform" />
+          {/* Hover Overlay (Minimal) - Scoped to group/card */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
+             <div className="w-12 h-12 flex items-center justify-center rounded-full bg-brand-400/90 shadow-lg transform scale-50 group-hover/card:scale-100 transition-all duration-300">
+                <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+             </div>
           </div>
         </div>
 
-        {/* Text Content - Outside the image */}
+        {/* Text Content */}
         <div>
-          <h3 className="text-sm md:text-base font-bold text-zinc-200 group-hover:text-brand-400 transition-colors line-clamp-1 leading-tight" title={anime.title}>
+          <h3 className="text-sm md:text-base font-bold text-zinc-200 group-hover/card:text-brand-400 transition-colors line-clamp-1 leading-tight" title={anime.title}>
             {anime.title}
           </h3>
           <div className="flex items-center justify-between mt-1">

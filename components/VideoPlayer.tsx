@@ -20,12 +20,34 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [category, setCategory] = useState<'sub' | 'dub'>('sub');
   const [server, setServer] = useState<'vidWish' | 'megaPlay'>('megaPlay');
 
-  // The URL requires the specific hianime episode ID (e.g. "anime-slug$episode$id")
-  // We use the episodeId directly as it comes from the API's episode list
-  const hianimeEpId = episodeId;
+  // Helper to extract numeric ID (e.g., "monster-37$episode$1046" -> "1046")
+  const extractNumericId = (id: string) => {
+      if (!id) return '';
+      
+      // Handle standard scraper format: anime-slug$episode$1234
+      if (id.includes('$episode$')) {
+          return id.split('$episode$')[1];
+      }
+      
+      // Handle legacy/alternative format: anime-slug-episode-1234 (Extract last digits)
+      const match = id.match(/-(\d+)$/);
+      if (match) {
+          return match[1];
+      }
+
+      // If it looks like a raw number, return it
+      if (/^\d+$/.test(id)) {
+          return id;
+      }
+
+      // Fallback
+      return id;
+  };
+
+  const hianimeEpId = extractNumericId(episodeId);
   
   const domain = server === "vidWish" ? "vidwish.live" : "megaplay.buzz";
-  // Format: https://megaplay.buzz/stream/s-2/{hianime-ep-id}/{language}
+  // Format: https://megaplay.buzz/stream/s-2/{numeric-id}/{language}
   const src = `https://${domain}/stream/s-2/${hianimeEpId}/${category}`;
 
   return (
@@ -136,7 +158,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className="relative z-10 pt-4 border-t border-dark-700 flex justify-between items-center text-xs font-mono">
             <div className="flex items-center gap-2 text-zinc-400">
                 <Info className="w-4 h-4 text-brand-400" />
-                <span>PLAYING: EPISODE <span className="text-white font-bold">{currentEp.number}</span></span>
+                <span>PLAYING: EPISODE <span className="text-white font-bold">{currentEp.number}</span> <span className="text-zinc-600">ID: {hianimeEpId}</span></span>
             </div>
             {currentEp.isFiller && (
                 <span className="flex items-center gap-2 text-red-500 font-bold uppercase tracking-wider bg-red-500/10 px-2 py-0.5 border border-red-500/20">
