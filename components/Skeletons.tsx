@@ -7,17 +7,17 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className }) => (
 
 export const AnimeCardSkeleton: React.FC = () => (
   <div className="flex-shrink-0 w-full animate-pulse">
-    {/* Card Image Area - Matching aspect-[2/3] of real card */}
+    {/* Card Image Area - Matching aspect-[2/3] */}
     <div className="relative aspect-[2/3] w-full overflow-hidden bg-dark-800 rounded-sm border border-white/5">
        <div className="absolute inset-0 skeleton-shimmer opacity-50" />
     </div>
     
     {/* Text Content */}
-    <div className="mt-2 space-y-2">
-      <Skeleton className="h-3 w-3/4 rounded-sm" />
+    <div className="mt-2 md:mt-3 space-y-2">
+      <Skeleton className="h-3 md:h-4 w-3/4 rounded-sm" />
       <div className="flex justify-between items-center">
-         <Skeleton className="h-2 w-1/3 rounded-sm" />
-         <Skeleton className="h-2 w-4 rounded-sm" />
+         <Skeleton className="h-2 md:h-3 w-1/3 rounded-sm" />
+         <Skeleton className="h-2 md:h-3 w-4 rounded-sm" />
       </div>
     </div>
   </div>
@@ -113,7 +113,6 @@ export const HomeSkeleton: React.FC = () => (
 );
 
 export const CategorySkeleton: React.FC = () => (
-   // Only return the grid. Outer container/padding is handled by the page component.
    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
         {[...Array(18)].map((_, i) => (
             <AnimeCardSkeleton key={i} />

@@ -5,7 +5,6 @@ import { CategoryResult } from '../types';
 import { AnimeCard } from '../components/AnimeCard';
 import { CategorySkeleton } from '../components/Skeletons';
 import { ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export const Category: React.FC = () => {
   const { category } = useParams<{ category: string }>();
@@ -62,11 +61,7 @@ export const Category: React.FC = () => {
         ) : isLoading ? (
           <CategorySkeleton />
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
               {animes.map((anime) => (
                 <AnimeCard key={anime.id} anime={anime} layout="grid" />
@@ -101,7 +96,7 @@ export const Category: React.FC = () => {
                 </button>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
