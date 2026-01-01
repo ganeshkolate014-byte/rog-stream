@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^0.1.0",
+    "@google/genai": "*",
     "@tanstack/react-query": "^5.90.15",
     "axios": "^1.13.2",
     "firebase": "^10.12.0",
