@@ -53,15 +53,15 @@ export const Navbar: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 h-14 md:h-20"
       >
-        {/* Background Layer - Smooth Opacity Transition to prevent flickering */}
+        {/* Background Layer - Hidden on Mobile to remove solid black */}
         <div 
-            className={`absolute inset-0 bg-black border-b border-white/5 transition-opacity duration-300 ease-in-out ${
+            className={`absolute inset-0 bg-black border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
                 isScrolled ? 'opacity-100 shadow-lg' : 'opacity-0 border-transparent'
             }`} 
         />
         
-        {/* Gradient Overlay for Top Visibility (Always visible slightly for contrast) */}
-        <div className={`absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${isScrolled ? 'opacity-0' : 'opacity-100'}`} />
+        {/* Gradient Overlay - Always visible on mobile for text contrast */}
+        <div className={`absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${isScrolled ? 'opacity-100 md:opacity-0' : 'opacity-100'}`} />
 
         <div className="relative z-20 max-w-[1600px] mx-auto px-3 md:px-8 h-full">
           <div className="flex items-center h-full gap-3 md:gap-8">

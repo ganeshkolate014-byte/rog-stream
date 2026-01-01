@@ -6,18 +6,18 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 export const AnimeCardSkeleton: React.FC = () => (
-  <div className="flex-shrink-0 w-full mb-4 md:mb-6 animate-pulse">
-    {/* Card Image Area - Matching aspect-[2/3] */}
+  <div className="flex-shrink-0 w-full animate-pulse">
+    {/* Card Image Area - Matching aspect-[2/3] of real card */}
     <div className="relative aspect-[2/3] w-full overflow-hidden bg-dark-800 rounded-sm border border-white/5">
        <div className="absolute inset-0 skeleton-shimmer opacity-50" />
     </div>
     
     {/* Text Content */}
-    <div className="mt-2 md:mt-3 space-y-2">
-      <Skeleton className="h-3 md:h-4 w-3/4 rounded-sm" />
+    <div className="mt-2 space-y-2">
+      <Skeleton className="h-3 w-3/4 rounded-sm" />
       <div className="flex justify-between items-center">
-         <Skeleton className="h-2 md:h-3 w-1/3 rounded-sm" />
-         <Skeleton className="h-2 md:h-3 w-4 rounded-sm" />
+         <Skeleton className="h-2 w-1/3 rounded-sm" />
+         <Skeleton className="h-2 w-4 rounded-sm" />
       </div>
     </div>
   </div>
@@ -113,16 +113,12 @@ export const HomeSkeleton: React.FC = () => (
 );
 
 export const CategorySkeleton: React.FC = () => (
-  <div className="min-h-screen bg-dark-900 pt-20 md:pt-28 px-3 md:px-4 pb-12">
-    <div className="max-w-7xl mx-auto">
-       <Skeleton className="h-8 md:h-10 w-48 md:w-64 mb-6 md:mb-10 rounded-sm border-l-4 border-dark-700" />
-       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
-            {[...Array(18)].map((_, i) => (
-                <AnimeCardSkeleton key={i} />
-            ))}
-       </div>
-    </div>
-  </div>
+   // Only return the grid. Outer container/padding is handled by the page component.
+   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
+        {[...Array(18)].map((_, i) => (
+            <AnimeCardSkeleton key={i} />
+        ))}
+   </div>
 );
 
 export const DetailSkeleton: React.FC = () => (
