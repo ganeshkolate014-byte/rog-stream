@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move, Mouse, Sliders, Key, Bot } from 'lucide-react';
 import { DEFAULT_CONFIG, getConfig } from '../services/api';
 import axios from 'axios';
 
@@ -14,8 +14,11 @@ export const Admin: React.FC = () => {
       heroTitleFontSize: 'large',
       heroAspectRatio: '16:9',
       enableTrackpad: false,
-      trackpadWidth: 256, // Default width (w-64 = 256px)
-      trackpadHeight: 192 // Default height (h-48 = 192px)
+      trackpadWidth: 256,
+      trackpadHeight: 192,
+      scrollSensitivity: 2, // Default sensitivity
+      invertScroll: false,
+      showRightClick: false // Option to show right click button
   });
   
   const [testResult, setTestResult] = useState<{ status: string; message: string; data?: any } | null>(null);
@@ -67,27 +70,31 @@ export const Admin: React.FC = () => {
           heroAspectRatio: '16:9',
           enableTrackpad: false,
           trackpadWidth: 256,
-          trackpadHeight: 192
+          trackpadHeight: 192,
+          scrollSensitivity: 2,
+          invertScroll: false,
+          showRightClick: false
       });
       window.location.reload();
     }
   };
 
-  const handleEndpointChange = (key: string, value: string) => {
-    setConfig(prev => ({
-      ...prev,
-      endpoints: {
-        ...prev.endpoints,
-        [key]: value
-      }
-    }));
+  const generateApiKey = () => {
+    // Generate a secure random hex string
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    const key = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    setConfig(prev => ({ ...prev, apiKey: `ak_${key}` }));
   };
 
   const runTest = async () => {
     setTestResult({ status: 'loading', message: 'Fetching...' });
     try {
         const url = `${config.baseUrl.replace(/\/+$/, '')}${testEndpoint}`;
-        const res = await axios.get(url);
+        // Include API key in test request headers
+        const headers = config.apiKey ? { 'x-api-key': config.apiKey } : {};
+        
+        const res = await axios.get(url, { headers });
         setTestResult({ 
             status: 'success', 
             message: `Status: ${res.status}`, 
@@ -160,34 +167,133 @@ export const Admin: React.FC = () => {
                     </div>
 
                     {uiConfig.enableTrackpad && (
-                        <div className="space-y-4 pt-2 border-t border-dark-700">
-                             <h3 className="text-xs font-bold text-brand-400 uppercase mb-3 flex items-center gap-2">
-                                <Move className="w-3 h-3" /> Trackpad Dimensions
-                             </h3>
-                             <div>
-                                <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex justify-between">
-                                    Width <span>{uiConfig.trackpadWidth}px</span>
-                                </label>
-                                <input 
-                                    type="range" min="150" max="500" step="10"
-                                    value={uiConfig.trackpadWidth}
-                                    onChange={(e) => setUiConfig({...uiConfig, trackpadWidth: parseInt(e.target.value)})}
-                                    className="w-full accent-brand-400 h-1 bg-dark-600 rounded-lg appearance-none cursor-pointer"
-                                />
+                        <div className="space-y-6 pt-4 border-t border-dark-700">
+                             
+                             {/* Size Config */}
+                             <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-brand-400 uppercase flex items-center gap-2">
+                                    <Move className="w-3 h-3" /> Dimensions
+                                </h3>
+                                <div>
+                                    <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex justify-between">
+                                        Width <span>{uiConfig.trackpadWidth}px</span>
+                                    </label>
+                                    <input 
+                                        type="range" min="150" max="500" step="10"
+                                        value={uiConfig.trackpadWidth}
+                                        onChange={(e) => setUiConfig({...uiConfig, trackpadWidth: parseInt(e.target.value)})}
+                                        className="w-full accent-brand-400 h-1 bg-dark-600 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex justify-between">
+                                        Height <span>{uiConfig.trackpadHeight}px</span>
+                                    </label>
+                                    <input 
+                                        type="range" min="150" max="500" step="10"
+                                        value={uiConfig.trackpadHeight}
+                                        onChange={(e) => setUiConfig({...uiConfig, trackpadHeight: parseInt(e.target.value)})}
+                                        className="w-full accent-brand-400 h-1 bg-dark-600 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
                              </div>
-                             <div>
-                                <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex justify-between">
-                                    Height <span>{uiConfig.trackpadHeight}px</span>
-                                </label>
-                                <input 
-                                    type="range" min="150" max="500" step="10"
-                                    value={uiConfig.trackpadHeight}
-                                    onChange={(e) => setUiConfig({...uiConfig, trackpadHeight: parseInt(e.target.value)})}
-                                    className="w-full accent-brand-400 h-1 bg-dark-600 rounded-lg appearance-none cursor-pointer"
-                                />
+
+                             {/* Functionality Config */}
+                             <div className="space-y-4 pt-4 border-t border-dark-700">
+                                <h3 className="text-xs font-bold text-brand-400 uppercase flex items-center gap-2">
+                                    <Sliders className="w-3 h-3" /> Capabilities
+                                </h3>
+                                
+                                {/* Scroll Sensitivity */}
+                                <div>
+                                    <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex justify-between">
+                                        Scroll Sensitivity <span>{uiConfig.scrollSensitivity}x</span>
+                                    </label>
+                                    <input 
+                                        type="range" min="1" max="10" step="0.5"
+                                        value={uiConfig.scrollSensitivity}
+                                        onChange={(e) => setUiConfig({...uiConfig, scrollSensitivity: parseFloat(e.target.value)})}
+                                        className="w-full accent-brand-400 h-1 bg-dark-600 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                </div>
+
+                                {/* Right Click Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-zinc-400 uppercase">Enable Right Click</label>
+                                    <button 
+                                        onClick={() => setUiConfig({...uiConfig, showRightClick: !uiConfig.showRightClick})}
+                                        className={`w-8 h-4 rounded-full relative transition-colors ${uiConfig.showRightClick ? 'bg-brand-400' : 'bg-dark-600'}`}
+                                    >
+                                        <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-md ${uiConfig.showRightClick ? 'left-4.5' : 'left-0.5'}`} />
+                                    </button>
+                                </div>
                              </div>
+
                         </div>
                     )}
+                </div>
+
+                {/* Base URL */}
+                <div className="bg-dark-900 border border-dark-700 p-6 relative">
+                    <h2 className="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2 border-b border-dark-700 pb-2">
+                        <Database className="w-4 h-4 text-brand-400" /> Base URL
+                    </h2>
+                    <div>
+                        <input 
+                            type="text" 
+                            value={config.baseUrl}
+                            onChange={(e) => setConfig({...config, baseUrl: e.target.value})}
+                            className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600 font-mono"
+                            placeholder="https://api.example.com/v1"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-2">Enter the root URL of your backend.</p>
+                    </div>
+                </div>
+
+                {/* Security & Keys */}
+                <div className="bg-dark-900 border border-dark-700 p-6 relative">
+                    <h2 className="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2 border-b border-dark-700 pb-2">
+                        <Key className="w-4 h-4 text-brand-400" /> Access Keys
+                    </h2>
+                    
+                    <div className="space-y-4">
+                        {/* Anime API Key */}
+                        <div>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-1 block">Backend API Key</label>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    value={config.apiKey || ''}
+                                    onChange={(e) => setConfig({...config, apiKey: e.target.value})}
+                                    className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600 font-mono"
+                                    placeholder="x-api-key"
+                                />
+                                <button 
+                                    onClick={generateApiKey}
+                                    className="px-4 bg-dark-800 border border-dark-600 hover:bg-brand-400 hover:text-black hover:border-brand-400 text-white transition-colors text-xs font-bold uppercase tracking-wider whitespace-nowrap"
+                                >
+                                    Generate
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Gemini API Key */}
+                        <div>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex items-center gap-2">
+                                <Bot className="w-3 h-3 text-brand-400" /> Gemini AI Key
+                            </label>
+                            <input 
+                                type="password" 
+                                value={config.geminiApiKey || ''}
+                                onChange={(e) => setConfig({...config, geminiApiKey: e.target.value})}
+                                className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600 font-mono"
+                                placeholder="Paste your Google Gemini API Key here"
+                            />
+                            <p className="text-[10px] text-zinc-500 mt-2">
+                                Required for AI Chatbot. Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">aistudio.google.com</a>.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Visual Settings */}
@@ -222,7 +328,6 @@ export const Admin: React.FC = () => {
                                 <option value="cinematic">Cinematic (80vh)</option>
                                 <option value="fullscreen">Full Screen (100vh)</option>
                             </select>
-                            <p className="text-[10px] text-zinc-500 mt-1">Controls the height/width ratio of the main slider.</p>
                         </div>
 
                         {/* Poster Name / Title Customization */}
@@ -275,23 +380,6 @@ export const Admin: React.FC = () => {
                                 </div>
                              </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Base URL */}
-                <div className="bg-dark-900 border border-dark-700 p-6 relative">
-                    <h2 className="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2 border-b border-dark-700 pb-2">
-                        <Database className="w-4 h-4 text-brand-400" /> Base URL
-                    </h2>
-                    <div>
-                        <input 
-                            type="text" 
-                            value={config.baseUrl}
-                            onChange={(e) => setConfig({...config, baseUrl: e.target.value})}
-                            className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600"
-                            placeholder="https://api.example.com/v1"
-                        />
-                        <p className="text-[10px] text-zinc-500 mt-2">Enter the root URL of your backend.</p>
                     </div>
                 </div>
 

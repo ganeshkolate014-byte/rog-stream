@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
-import { HomeData, Anime, HistoryItem } from '../types';
+import { HomeData, Anime } from '../types';
 import { Hero } from '../components/Hero';
 import { AnimeCard } from '../components/AnimeCard';
-import { HomeSkeleton } from '../components/Skeletons';
-import { ChevronRight, AlertCircle, Play } from 'lucide-react';
+import { ContinueWatchingCard } from '../components/ContinueWatchingCard'; // New Component
+import { HomeSkeleton, ContinueWatchingCardSkeleton } from '../components/Skeletons';
+import { ChevronRight, AlertCircle, LayoutGrid } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getUserProgress, UserProgress } from '../services/firebase';
+import { motion } from 'framer-motion';
 
 const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'portrait' | 'landscape'; link?: string; subtitle?: string }> = ({ 
     title, items, variant = 'portrait', link, subtitle 
@@ -13,15 +17,15 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
     if (!items || items.length === 0) return null;
 
     return (
-        <section className="mb-12 relative group">
-            <div className="max-w-[1600px] mx-auto px-4 md:px-6">
+        <section className="mb-8 md:mb-12 relative group">
+            <div className="max-w-[1600px] mx-auto px-3 md:px-6">
                 {/* Header */}
-                <div className="flex items-end justify-between mb-4 border-l-4 border-brand-400 pl-4">
+                <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
                     <div>
-                        <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wide font-display italic">
+                        <h2 className="text-lg md:text-2xl font-black text-white uppercase tracking-wide font-display italic">
                             {title}
                         </h2>
-                        {subtitle && <p className="text-brand-400 text-xs font-bold uppercase tracking-widest mt-0.5">{subtitle}</p>}
+                        {subtitle && <p className="text-brand-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5">{subtitle}</p>}
                     </div>
                     {link && (
                         <Link to={link} className="hidden md:flex items-center text-xs font-bold text-zinc-500 hover:text-brand-400 uppercase tracking-widest transition-colors">
@@ -31,19 +35,19 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
                 </div>
 
                 {/* Scroll Container */}
-                <div className="relative -mx-4 md:-mx-6 px-4 md:px-6">
-                    <div className="flex overflow-x-auto gap-3 md:gap-4 pb-4 scrollbar-hide snap-x">
+                <div className="relative -mx-3 md:-mx-6 px-3 md:px-6">
+                    <div className="flex overflow-x-auto gap-3 md:gap-5 pb-4 scrollbar-hide snap-x">
                         {items.map((anime, idx) => (
                             <div key={anime.id} className="snap-start">
-                                <AnimeCard anime={anime} variant={variant} rank={subtitle === 'Global Top 10' ? idx + 1 : undefined} />
+                                <AnimeCard anime={anime} variant={variant} rank={subtitle === 'Global Top 10' ? idx + 1 : undefined} layout="row" />
                             </div>
                         ))}
                         
                         {/* View All Card at the end */}
                         {link && (
-                             <div className="snap-start flex-shrink-0 w-[100px] flex items-center justify-center">
-                                <Link to={link} className="w-12 h-12 rounded-none border border-white/20 flex items-center justify-center hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg]">
-                                    <ChevronRight className="w-6 h-6 skew-x-[12deg]" />
+                             <div className="snap-start flex-shrink-0 w-[80px] md:w-[100px] flex items-center justify-center">
+                                <Link to={link} className="w-10 h-10 md:w-12 md:h-12 rounded-none border border-white/20 flex items-center justify-center hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg]">
+                                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6 skew-x-[12deg]" />
                                 </Link>
                              </div>
                         )}
@@ -57,64 +61,87 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
     );
 };
 
-// Separate component for Continue Watching based on local storage history
+// Continue Watching based on Auth state
 const ContinueWatchingSection: React.FC = () => {
-    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [watching, setWatching] = useState<UserProgress[]>([]);
+    const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem('watch_history');
-            if (stored) {
-                setHistory(JSON.parse(stored));
-            }
-        } catch (e) {}
-    }, []);
+        const fetchProgress = async () => {
+            setIsLoadingProgress(true);
+            setError(null);
+            if (authLoading) return;
 
-    if (history.length === 0) return null;
+            if (user) {
+                try {
+                    const data = await getUserProgress(user.uid);
+                    const watchingList = Object.values(data)
+                        .filter(p => p.status === 'Watching')
+                        .sort((a, b) => b.lastUpdated - a.lastUpdated);
+                    setWatching(watchingList);
+                } catch (e: any) {
+                    setError(e.message);
+                }
+            } else {
+                setWatching([]);
+            }
+            setIsLoadingProgress(false);
+        };
+
+        fetchProgress();
+    }, [user, authLoading]);
+
+    if (authLoading) {
+        return null; // Don't show anything until auth state is resolved
+    }
+
+    if (!user) {
+        return null; // Hide if not logged in.
+    }
+
+    if (error) {
+        return (
+            <section className="mb-12">
+                <div className="max-w-[1600px] mx-auto px-4 md:px-6">
+                     <div className="bg-red-900/20 border border-red-500/30 p-4 text-center rounded-md flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-400" />
+                            <h3 className="text-red-400 font-bold uppercase text-sm">Continue Watching Offline</h3>
+                        </div>
+                        <p className="text-zinc-400 text-xs font-mono">{error}</p>
+                     </div>
+                </div>
+            </section>
+        );
+    }
+
+    if (watching.length === 0 && !isLoadingProgress) {
+        return null;
+    }
 
     return (
-        <section className="mb-12 relative group">
-            <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-                <div className="flex items-end justify-between mb-4 border-l-4 border-brand-400 pl-4">
+        <section className="mb-8 md:mb-12 relative group">
+            <div className="max-w-[1600px] mx-auto px-3 md:px-6">
+                <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
                      <div>
-                        <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wide font-display italic">
+                        <h2 className="text-lg md:text-2xl font-black text-white uppercase tracking-wide font-display italic">
                             Continue Session
                         </h2>
-                        <p className="text-brand-400 text-xs font-bold uppercase tracking-widest mt-0.5">Resume Playback</p>
+                        <p className="text-brand-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mt-0.5">Resume Playback</p>
                     </div>
                 </div>
 
-                <div className="relative -mx-4 md:-mx-6 px-4 md:px-6">
-                    <div className="flex overflow-x-auto gap-3 md:gap-4 pb-4 scrollbar-hide snap-x">
-                        {history.map((item) => (
-                             <div key={item.episodeId} className="w-[280px] md:w-[320px] flex-shrink-0 group snap-start">
-                                <Link to={`/watch/${encodeURIComponent(item.episodeId)}`} className="block">
-                                    <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover:border-brand-400/50 transition-all">
-                                        <img
-                                            src={item.image}
-                                            alt={item.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                        
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                            <div className="w-10 h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-brand-400 group-hover:border-brand-400 transition-all">
-                                                <Play className="w-4 h-4 fill-white text-white group-hover:fill-black group-hover:text-black ml-0.5" />
-                                            </div>
-                                        </div>
-
-                                        <div className="absolute bottom-3 left-3 right-3">
-                                            <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-widest mb-0.5 line-clamp-1">
-                                                {item.title}
-                                            </h4>
-                                            <h3 className="text-brand-400 font-bold text-sm uppercase">
-                                                Episode {item.episodeNumber}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </Link>
-                             </div>
-                        ))}
+                <div className="relative -mx-3 md:-mx-6 px-3 md:px-6">
+                    <div className="flex overflow-x-auto gap-3 md:gap-5 pb-4 scrollbar-hide snap-x">
+                        {isLoadingProgress ? (
+                            [...Array(4)].map((_, i) => <ContinueWatchingCardSkeleton key={i} />)
+                        ) : (
+                            watching.map((item) => (
+                                <ContinueWatchingCard key={item.animeId} progress={item} />
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -124,6 +151,7 @@ const ContinueWatchingSection: React.FC = () => {
 
 export const Home: React.FC = () => {
   const { data, isLoading, isError, error } = useApi<HomeData>(constructUrl('home'));
+  const { data: genresData } = useApi<string[]>(constructUrl('genres')); // Fetch genres dynamically
 
   if (isLoading) return <HomeSkeleton />;
   if (isError) return (
@@ -141,14 +169,24 @@ export const Home: React.FC = () => {
   const latestEpisode = data?.latestEpisode || data?.latestEpisodeAnimes || [];
   const top10 = data?.top10?.week || data?.top10Animes?.week || [];
 
+  const defaultGenres = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mecha", "Music", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller", "Mystery", "Psychological"];
+  const displayGenres = genresData && genresData.length > 0 ? genresData : defaultGenres;
+
   return (
-    <div className="min-h-screen pb-20 bg-dark-950">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.5 }}
+      className="min-h-screen pb-20 bg-dark-950"
+    >
       
-      {/* Hero Section */}
-      {spotlight.length > 0 && <Hero items={spotlight} />}
+      {/* Hero Section - Hidden on mobile */}
+      <div className="hidden md:block">
+        {spotlight.length > 0 && <Hero items={spotlight} />}
+      </div>
 
       {/* Content pulled up slightly to overlap hero fade with z-index correction - Adjusted for less overlap */}
-      <div className="relative z-40 -mt-10 md:-mt-16 space-y-4">
+      <div className={`relative z-40 space-y-4 ${spotlight.length > 0 ? 'md:-mt-16 -mt-0 pt-20 md:pt-0' : 'pt-24'}`}>
         
         {/* Real Continue Watching Section */}
         <ContinueWatchingSection />
@@ -189,20 +227,39 @@ export const Home: React.FC = () => {
             link="/animes/top-upcoming"
         />
         
-        {/* Kickstart Your Journey (Discovery) */}
-        <div className="py-12 bg-dark-900 border-y border-brand-400/10">
+        {/* Kickstart Your Journey (Discovery) - Dynamic Genres - CLEAN GRID LAYOUT */}
+        <div className="py-8 md:py-16 bg-gradient-to-b from-dark-900 to-dark-950 border-t border-white/5 mt-12">
             <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-                <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-wide font-display mb-6">
-                    Select Genre
-                </h2>
-                <div className="flex flex-wrap gap-3">
-                    {["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mecha", "Music", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"].map((genre) => (
+                <div className="flex items-center justify-between mb-8">
+                     <div className="flex items-center gap-3">
+                        <LayoutGrid className="w-6 h-6 text-brand-400" />
+                        <div>
+                            <h2 className="text-xl md:text-3xl font-black text-white uppercase tracking-wide font-display italic">
+                                Explore <span className="text-brand-400">Genres</span>
+                            </h2>
+                            <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mt-1">Categorized Database</p>
+                        </div>
+                     </div>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                    {displayGenres.map((genre) => (
                     <Link 
                         key={genre} 
                         to={`/animes/${genre.toLowerCase().replace(/ /g, '-')}`}
-                        className="px-6 py-3 bg-dark-800 hover:bg-brand-400 hover:text-black border border-white/5 hover:border-brand-400 rounded-none text-zinc-400 font-bold uppercase tracking-wider transition-all duration-200 skew-x-[-12deg]"
+                        className="group relative overflow-hidden bg-dark-800 border border-white/5 hover:border-brand-400/50 rounded-sm p-4 flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(255,0,51,0.1)]"
                     >
-                        <span className="block skew-x-[12deg]">{genre}</span>
+                        {/* Hover Gradient Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-400/0 via-brand-400/0 to-brand-400/5 group-hover:to-brand-400/10 transition-all duration-500" />
+                        
+                        {/* Text */}
+                        <span className="relative z-10 text-xs md:text-sm font-bold text-zinc-400 group-hover:text-white uppercase tracking-widest transition-colors">
+                            {genre}
+                        </span>
+                        
+                        {/* Decorative Corner */}
+                        <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-transparent border-r-white/5 group-hover:border-r-brand-400 transition-colors duration-300" />
+                        <div className="absolute bottom-0 left-0 w-0 h-0 border-b-[6px] border-l-[6px] border-b-transparent border-l-white/5 group-hover:border-l-brand-400 transition-colors duration-300" />
                     </Link>
                     ))}
                 </div>
@@ -210,6 +267,6 @@ export const Home: React.FC = () => {
         </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 };

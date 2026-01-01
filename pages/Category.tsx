@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useApi } from '../services/api';
+import { useApi, constructUrl } from '../services/api';
 import { CategoryResult } from '../types';
 import { AnimeCard } from '../components/AnimeCard';
-import { AnimeCardSkeleton } from '../components/Skeletons';
+import { CategorySkeleton } from '../components/Skeletons';
 import { ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const Category: React.FC = () => {
   const { category } = useParams<{ category: string }>();
@@ -20,32 +21,36 @@ export const Category: React.FC = () => {
 
   const isStaticList = category && staticLists.includes(category);
   
-  // If it's not a static list, we assume it's a genre and use /animes/genre/{category}
-  const endpoint = isStaticList 
-    ? `/animes/${category}?page=${page}`
-    : `/animes/genre/${category}?page=${page}`;
+  let endpoint = '';
+  if (category) {
+      if (isStaticList) {
+          // Normal lists
+          endpoint = `/animes/${category}?page=${page}`;
+      } else {
+          // Genre list using specific hianime endpoint: /anime/hianime/genre/{id}
+          endpoint = constructUrl('genre', { id: category, page: page });
+      }
+  }
 
-  const { data: categoryResult, isLoading, error } = useApi<CategoryResult>(
-      category ? endpoint : ''
-  );
+  const { data: categoryResult, isLoading, error } = useApi<CategoryResult>(endpoint);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [category, page]);
+  // Removed useEffect window.scrollTo
 
   const handlePageChange = (newPage: number) => {
     setSearchParams({ page: newPage.toString() });
+    window.scrollTo(0, 0); // Keep for pagination
   };
 
   const formatTitle = (str: string) => str.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   
-  const animes = categoryResult?.response || categoryResult?.animes || [];
+  // Updated data access to include 'results'
+  const animes = categoryResult?.results || categoryResult?.response || categoryResult?.animes || [];
   const hasNextPage = categoryResult?.hasNextPage ?? categoryResult?.pageInfo?.hasNextPage;
 
   return (
-    <div className="min-h-screen bg-dark-900 pt-28 px-4 pb-12">
+    <div className="min-h-screen bg-dark-900 pt-20 md:pt-28 px-3 md:px-4 pb-12">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-10 border-l-8 border-brand-500 pl-6">
+        <h1 className="text-2xl md:text-4xl font-black text-white mb-6 md:mb-10 border-l-4 md:border-l-8 border-brand-500 pl-4 md:pl-6">
           {category ? formatTitle(category) : 'Anime List'}
         </h1>
 
@@ -55,16 +60,16 @@ export const Category: React.FC = () => {
              <p className="font-bold text-center px-4">{error.message || "Failed to load content"}</p>
           </div>
         ) : isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {[...Array(10)].map((_, i) => (
-              <AnimeCardSkeleton key={i} />
-            ))}
-          </div>
+          <CategorySkeleton />
         ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
               {animes.map((anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
+                <AnimeCard key={anime.id} anime={anime} layout="grid" />
               ))}
             </div>
 
@@ -80,10 +85,10 @@ export const Category: React.FC = () => {
                   disabled={page <= 1}
                   className="p-3 rounded-full bg-zinc-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-black transition-all active:scale-95"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 
-                <span className="text-white font-bold bg-zinc-800 px-6 py-2 rounded-full border border-white/5">
+                <span className="text-white font-bold bg-zinc-800 px-6 py-2 rounded-full border border-white/5 text-sm md:text-base">
                   Page {page}
                 </span>
 
@@ -92,13 +97,13 @@ export const Category: React.FC = () => {
                   disabled={!hasNextPage}
                   className="p-3 rounded-full bg-zinc-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-black transition-all active:scale-95"
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </div>
             )}
-          </>
+          </motion.div>
         )}
       </div>
     </div>
   );
-};
+}

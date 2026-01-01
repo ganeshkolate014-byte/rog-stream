@@ -5,14 +5,18 @@ import { ApiResponse } from "../types";
 // Default Configuration
 export const DEFAULT_CONFIG = {
   baseUrl: "https://newanimebackend.vercel.app",
+  apiKey: "", // For Anime Backend
+  geminiApiKey: "", // For Google Gemini AI
   endpoints: {
     home: "https://backendweb-bifc.onrender.com/api/v1/home", // Specific URL for Home
     search: "/anime/hianime/{keyword}", // New search structure
     details: "/anime/hianime/info?id={id}", 
     episodes: "/anime/episodes/{id}", 
-    schedule: "/anime/schedule",
+    schedule: "https://newanimebackend.vercel.app/anime/hianime/schedule", // Updated schedule endpoint
     stream: "/anime/episode-srcs",
-    suggestion: "/anime/search/suggestion"
+    suggestion: "/anime/search/suggestion",
+    genres: "/anime/hianime/genres", // Fetch list of genres
+    genre: "/anime/hianime/genre/{id}" // Fetch specific genre data
   }
 };
 
@@ -81,10 +85,19 @@ export const constructUrl = (key: keyof typeof DEFAULT_CONFIG.endpoints, params:
 };
 
 export const fetchData = async <T>(url: string): Promise<ApiResponse<T>> => {
+  const config = getConfig();
+  
+  // Prepare headers with API Key if available
+  const requestOptions = {
+    headers: {
+        ...(config.apiKey ? { 'x-api-key': config.apiKey } : {})
+    }
+  };
+
   // Support absolute URLs (overriding baseUrl)
   if (url.startsWith('http://') || url.startsWith('https://')) {
     try {
-      const { data } = await axios.get<ApiResponse<T>>(url);
+      const { data } = await axios.get<ApiResponse<T>>(url, requestOptions);
       return data;
     } catch (error) {
        if (axios.isAxiosError(error)) {
@@ -98,7 +111,7 @@ export const fetchData = async <T>(url: string): Promise<ApiResponse<T>> => {
   const endpoint = url.startsWith('/') ? url : `/${url}`;
   
   try {
-    const { data } = await axios.get<ApiResponse<T>>(`${baseUrl}${endpoint}`);
+    const { data } = await axios.get<ApiResponse<T>>(`${baseUrl}${endpoint}`, requestOptions);
     return data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -117,7 +130,7 @@ export const useApi = <T>(
   const finalEndpoint = endpointOrKey; 
 
   return useQuery({
-    queryKey: [config.baseUrl, finalEndpoint],
+    queryKey: [config.baseUrl, config.apiKey, finalEndpoint], // Include apiKey in cache key
     queryFn: () => fetchData<T>(finalEndpoint),
     select: (response: any) => response?.data || response, 
     retry: 1,

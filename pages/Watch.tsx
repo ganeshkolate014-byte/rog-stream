@@ -2,65 +2,68 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail, Episode, HistoryItem } from '../types';
-import { Loader2, AlertCircle, ChevronLeft, Play } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, Play, X, Grid, List, Search, LayoutGrid } from 'lucide-react';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { AnimeCard } from '../components/AnimeCard';
+import { useAuth } from '../context/AuthContext';
+import { saveUserHistory, saveAnimeProgress } from '../services/firebase';
+import { motion } from 'framer-motion';
 
 export const Watch: React.FC = () => {
   const { episodeId } = useParams<{ episodeId: string }>();
   const navigate = useNavigate();
-
+  const { user } = useAuth();
+  const [epSearch, setEpSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  
+  // FIXED: Correctly derive Anime ID from Episode ID string
   const deriveAnimeId = (epId: string) => {
     if (!epId) return '';
-    // Handle monster-37$episode$1046 format from new JSON
-    if (epId.includes('$episode$')) return epId.split('$episode$')[0];
+    if (epId.includes('?ep=')) return epId.split('?ep=')[0];
+    if (epId.includes('$episode$')) return epId.split('$episode$')[0]; // Take the LEFT part (Anime ID)
     if (epId.includes('::')) return epId.split('::')[0];
     return epId.replace(/-episode-\d+$/, '');
   };
 
   const animeId = episodeId ? deriveAnimeId(episodeId) : '';
 
-  // Fetch from Details endpoint because it contains the full episode list now
   const { data: animeData, isLoading, error } = useApi<AnimeDetail>(
       animeId ? constructUrl('details', { id: animeId }) : ''
   );
 
-  // Save to History Effect
   useEffect(() => {
-    if (animeData && episodeId) {
-        const episodes = animeData.episodes || [];
-        const currentEp = episodes.find(e => e.id === episodeId);
-        
-        if (currentEp) {
-            const historyItem: HistoryItem = {
-                animeId: animeId,
-                episodeId: episodeId,
-                title: animeData.title,
-                episodeNumber: currentEp.number,
-                image: animeData.banner || animeData.image || animeData.poster || '',
-                timestamp: Date.now()
-            };
+    const saveProgress = async () => {
+        if (animeData && episodeId && user) {
+            const episodes = animeData.episodes || [];
+            const currentEp = episodes.find(e => e.id === episodeId);
+            
+            if (currentEp) {
+                const historyItem: HistoryItem = {
+                    animeId: animeId,
+                    episodeId: episodeId,
+                    title: animeData.title,
+                    episodeNumber: currentEp.number,
+                    image: animeData.banner || animeData.image || animeData.poster || '',
+                    timestamp: Date.now()
+                };
 
-            try {
-                const existingHistoryStr = localStorage.getItem('watch_history');
-                let history: HistoryItem[] = existingHistoryStr ? JSON.parse(existingHistoryStr) : [];
-                
-                // Remove existing entry for this anime to push new state to top
-                history = history.filter(h => h.animeId !== animeId);
-                
-                // Add new entry to start
-                history.unshift(historyItem);
-                
-                // Keep only last 20 items
-                if (history.length > 20) history.pop();
-                
-                localStorage.setItem('watch_history', JSON.stringify(history));
-            } catch (e) {
-                console.error("Failed to save history");
+                try {
+                  await saveUserHistory(user.uid, historyItem);
+                  await saveAnimeProgress(user.uid, animeData, currentEp);
+                } catch (error) {
+                  console.error("Failed to save user progress to the cloud:", error);
+                }
             }
         }
-    }
-  }, [animeData, episodeId, animeId]);
+    };
+    saveProgress();
+  }, [animeData, episodeId, animeId, user]);
+  
+  // Scroll to top on new episode
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [episodeId]);
+
 
   if (isLoading) {
     return (
@@ -78,6 +81,7 @@ export const Watch: React.FC = () => {
             <div className="text-center">
                 <h1 className="text-2xl font-bold text-white uppercase tracking-widest mb-2">Error</h1>
                 <p className="text-zinc-500 text-sm">Episode data not found.</p>
+                <p className="text-zinc-700 text-xs font-mono mt-2">ID: {animeId}</p>
             </div>
             <button 
                 onClick={() => navigate('/')} 
@@ -104,6 +108,11 @@ export const Watch: React.FC = () => {
       }
   };
 
+  const filteredEpisodes = episodes.filter(ep => 
+      ep.number.toString().includes(epSearch) || 
+      (ep.title && ep.title.toLowerCase().includes(epSearch.toLowerCase()))
+  );
+
   if (!currentEp) {
       return (
           <div className="min-h-screen bg-dark-950 flex items-center justify-center text-white flex-col gap-4">
@@ -113,99 +122,192 @@ export const Watch: React.FC = () => {
       );
   }
 
-  // Combine related and recommendations
   const recommendations = [...(animeData.relatedAnime || []), ...(animeData.recommendations || [])];
 
   return (
-    <div className="min-h-screen bg-dark-950 pt-24 pb-12 text-zinc-200">
-      <div className="max-w-[1600px] mx-auto w-full px-4 md:px-6">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-dark-950 pt-16 md:pt-24 pb-12 text-zinc-200 relative"
+    >
+      <div className="max-w-[1800px] mx-auto w-full px-2 md:px-6">
         
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-dark-700 pb-4">
+        {/* Header Navigation - Mobile optimized */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-2 border-b border-dark-700 pb-2 md:pb-4">
              <div>
                 <button 
                     onClick={() => navigate(`/anime/${animeId}`)}
-                    className="flex items-center gap-2 text-xs font-bold text-brand-400 uppercase tracking-widest hover:text-white mb-2"
+                    className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-brand-400 uppercase tracking-widest hover:text-white mb-1"
                 >
                     <ChevronLeft className="w-3 h-3" /> Back to Anime
                 </button>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white uppercase italic">
+                <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white uppercase italic truncate max-w-2xl leading-tight">
                     {currentEp.title || `Episode ${currentEp.number}`}
                 </h1>
-                <p className="text-zinc-500 text-xs mt-1 font-mono">
+                <p className="text-zinc-500 text-[10px] md:text-xs font-mono">
                     {animeData.title}
                 </p>
              </div>
-             
-             <div className="flex items-center gap-2">
-                 <span className="text-green-500 text-[10px] font-bold uppercase border border-green-500/30 px-2 py-1 bg-green-500/10">ONLINE</span>
+             <div className="flex items-center gap-2 self-end md:self-auto">
+                 <span className="text-green-500 text-[9px] md:text-[10px] font-bold uppercase border border-green-500/30 px-2 py-1 bg-green-500/10 rounded-sm">
+                    ONLINE
+                 </span>
              </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        {/* Layout Container */}
+        <div className="flex flex-col gap-6 lg:gap-8">
             
-            {/* Main Content: Player (Col Span 9) */}
-            <div className="lg:col-span-9 space-y-12">
-                <VideoPlayer 
-                    episodeId={episodeId || ''}
-                    currentEp={currentEp}
-                    changeEpisode={handleNavigate}
-                    hasPrevEp={!!prevEp}
-                    hasNextEp={!!nextEp}
-                />
+            {/* Top Section: Player & List */}
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+                
+                {/* Left Column: Video Player */}
+                <div className="flex-1 min-w-0">
+                    <VideoPlayer 
+                        episodeId={episodeId || ''}
+                        currentEp={currentEp}
+                        changeEpisode={handleNavigate}
+                        hasPrevEp={!!prevEp}
+                        hasNextEp={!!nextEp}
+                    />
+                </div>
 
-                {/* Recommended Section (Below Player) */}
-                {recommendations.length > 0 && (
-                    <div className="pt-8 border-t border-dark-700">
-                        <h2 className="text-xl font-black text-white uppercase italic tracking-tighter mb-6 border-l-4 border-zinc-600 pl-4">
-                            Recommended <span className="text-brand-400">Data</span>
-                        </h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {recommendations.slice(0, 10).map(rel => (
-                                <AnimeCard key={rel.id} anime={rel} />
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {/* Right Column: Episode List */}
+                <div className="w-full lg:w-[400px] flex-shrink-0">
+                     <div className="bg-dark-900 border border-dark-700 flex flex-col rounded-sm overflow-hidden h-[450px] md:h-[600px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24 shadow-2xl">
+                         
+                         {/* List Header */}
+                         <div className="p-3 md:p-4 bg-dark-800 border-b border-dark-700 space-y-3">
+                             <div className="flex justify-between items-center">
+                                 <h3 className="font-bold text-white uppercase tracking-wider text-sm flex items-center gap-2">
+                                    <List className="w-4 h-4 text-brand-400" /> Episodes
+                                 </h3>
+                                 <div className="flex items-center gap-2">
+                                     {/* View Toggles */}
+                                     <div className="flex bg-dark-950 rounded-sm border border-dark-700 p-0.5">
+                                        <button 
+                                            onClick={() => setViewMode('list')}
+                                            className={`p-1 rounded-sm transition-colors ${viewMode === 'list' ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}
+                                            title="List View"
+                                        >
+                                            <List className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button 
+                                            onClick={() => setViewMode('grid')}
+                                            className={`p-1 rounded-sm transition-colors ${viewMode === 'grid' ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}
+                                            title="Grid View"
+                                        >
+                                            <LayoutGrid className="w-3.5 h-3.5" />
+                                        </button>
+                                     </div>
+                                     <span className="text-[10px] font-mono text-zinc-500 bg-black/50 px-2 py-1 rounded border border-white/5">
+                                         {episodes.length}
+                                     </span>
+                                 </div>
+                             </div>
+                             {/* Search Box */}
+                             <div className="relative">
+                                 <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                                 <input 
+                                    type="text"
+                                    placeholder="Search episode number..."
+                                    value={epSearch}
+                                    onChange={(e) => setEpSearch(e.target.value)}
+                                    className="w-full bg-dark-950 border border-dark-600 rounded-sm py-2 pl-9 pr-3 text-xs text-white placeholder-zinc-600 focus:border-brand-400 focus:outline-none"
+                                 />
+                             </div>
+                         </div>
+                         
+                         {/* List Content */}
+                         <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-brand-400/20 scrollbar-track-dark-900 p-2">
+                            {filteredEpisodes.length > 0 ? (
+                                viewMode === 'list' ? (
+                                    // List View
+                                    <div className="space-y-1">
+                                        {filteredEpisodes.map(ep => {
+                                            const isActive = ep.id === episodeId;
+                                            return (
+                                                <Link 
+                                                    key={ep.id}
+                                                    to={`/watch/${encodeURIComponent(ep.id)}`}
+                                                    className={`flex items-center gap-3 p-2 md:p-3 rounded-sm group transition-all duration-200 border-l-2 ${
+                                                        isActive 
+                                                        ? 'bg-brand-400/10 border-brand-400' 
+                                                        : 'bg-transparent border-transparent hover:bg-dark-800 hover:border-dark-600'
+                                                    }`}
+                                                >
+                                                    <div className={`w-8 h-6 md:w-10 md:h-8 flex items-center justify-center rounded-sm font-mono text-xs md:text-sm font-bold ${
+                                                        isActive ? 'bg-brand-400 text-black' : 'bg-dark-800 text-zinc-500 group-hover:text-white'
+                                                    }`}>
+                                                        {ep.number}
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className={`text-xs font-bold truncate ${
+                                                            isActive ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'
+                                                        }`}>
+                                                            {ep.title || `Episode ${ep.number}`}
+                                                        </div>
+                                                    </div>
+        
+                                                    {ep.isFiller && (
+                                                        <span className="text-[9px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded border border-red-500/20 uppercase font-bold tracking-wider">
+                                                            Filler
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    // Grid View
+                                    <div className="grid grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                        {filteredEpisodes.map(ep => {
+                                            const isActive = ep.id === episodeId;
+                                            return (
+                                                <Link 
+                                                    key={ep.id}
+                                                    to={`/watch/${encodeURIComponent(ep.id)}`}
+                                                    className={`aspect-square flex flex-col items-center justify-center rounded-sm border transition-all duration-200 ${
+                                                        isActive 
+                                                        ? 'bg-brand-400 text-black border-brand-400 font-bold' 
+                                                        : 'bg-dark-800 text-zinc-400 border-dark-600 hover:text-white hover:border-zinc-500'
+                                                    }`}
+                                                >
+                                                    <span className="text-sm font-mono">{ep.number}</span>
+                                                    {ep.isFiller && <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1" title="Filler"></span>}
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+                                )
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center">
+                                    <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                                    <p className="text-xs uppercase font-bold">No episodes found</p>
+                                </div>
+                            )}
+                         </div>
+                     </div>
+                </div>
             </div>
 
-            {/* Sidebar: Episode List (Col Span 3) */}
-            <div className="lg:col-span-3">
-                 <div className="bg-dark-900 border border-dark-700 flex flex-col h-[600px] lg:sticky lg:top-24">
-                     <div className="p-4 border-b border-dark-700 bg-dark-800">
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest flex justify-between items-center">
-                            Episodes
-                            <span className="text-brand-400 text-xs bg-black px-2 py-0.5 border border-brand-400/30">{episodes.length}</span>
-                        </h3>
-                     </div>
-                     
-                     <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-brand-400 scrollbar-track-dark-800 p-2 space-y-2">
-                        {episodes.map((ep) => (
-                            <Link 
-                                key={ep.id}
-                                to={`/watch/${encodeURIComponent(ep.id)}`}
-                                className={`flex items-center gap-3 p-3 transition-all group ${
-                                    ep.id === episodeId 
-                                    ? 'bg-brand-400 text-black font-bold' 
-                                    : 'bg-dark-800 text-zinc-400 hover:bg-dark-700 hover:text-white'
-                                }`}
-                            >
-                                <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-black/20 text-xs font-mono">
-                                    {ep.number}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs truncate">{ep.title || `Episode ${ep.number}`}</p>
-                                    {ep.isFiller && <span className="text-[9px] bg-red-500 text-white px-1 font-bold inline-block mt-1">FILLER</span>}
-                                </div>
-                                {ep.id === episodeId && <Play className="w-3 h-3 fill-black" />}
-                            </Link>
+            {/* Bottom Section: Recommendations */}
+            {recommendations.length > 0 && (
+                <div className="pt-6 border-t border-dark-700">
+                    <h2 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tighter mb-4 md:mb-6 border-l-4 border-zinc-600 pl-4">
+                        Recommended <span className="text-brand-400">Data</span>
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                        {recommendations.slice(0, 10).map(rel => (
+                            <AnimeCard key={rel.id} anime={rel} layout="grid" />
                         ))}
-                     </div>
-                 </div>
-            </div>
-
+                    </div>
+                </div>
+            )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-};
+}

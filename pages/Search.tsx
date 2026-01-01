@@ -5,6 +5,7 @@ import { SearchResult } from '../types';
 import { AnimeCard } from '../components/AnimeCard';
 import { AnimeCardSkeleton } from '../components/Skeletons';
 import { ArrowLeft, ArrowRight, Search as SearchIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,12 +19,12 @@ export const Search: React.FC = () => {
 
   const { data: searchResult, isLoading } = useApi<SearchResult>(searchUrl);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [query, page]);
+  // Removed useEffect window.scrollTo to let App.tsx handle it conditionally
 
   const handlePageChange = (newPage: number) => {
     setSearchParams({ q: query, page: newPage.toString() });
+    // For pagination within same route, we might want to scroll top
+    window.scrollTo(0, 0);
   };
 
   // Support new 'results' array and legacy fallback keys
@@ -35,16 +36,16 @@ export const Search: React.FC = () => {
   const genres = ["Action", "Romance", "Fantasy", "Drama", "Sci-Fi", "Comedy"];
 
   return (
-    <div className="min-h-screen bg-dark-900 pt-24 px-4 pb-12">
+    <div className="min-h-screen bg-dark-900 pt-20 md:pt-24 px-3 md:px-4 pb-12">
       <div className="max-w-7xl mx-auto">
         
         {/* Results Header */}
         {query && (
-            <div className="mb-8 border-b border-white/5 pb-4">
-                <h1 className="text-2xl text-white font-bold uppercase tracking-wide">
+            <div className="mb-6 md:mb-8 border-b border-white/5 pb-4">
+                <h1 className="text-xl md:text-2xl text-white font-bold uppercase tracking-wide">
                     Results for <span className="text-brand-400">"{query}"</span>
                 </h1>
-                <p className="text-zinc-500 text-sm font-mono mt-1">Found {results.length} matches</p>
+                <p className="text-zinc-500 text-xs md:text-sm font-mono mt-1">Found {results.length} matches</p>
             </div>
         )}
 
@@ -67,14 +68,18 @@ export const Search: React.FC = () => {
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-             {[...Array(10)].map((_, i) => <AnimeCardSkeleton key={i} />)}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
+             {[...Array(12)].map((_, i) => <AnimeCardSkeleton key={i} />)}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
               {results.map((anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
+                <AnimeCard key={anime.id} anime={anime} layout="grid" />
               ))}
             </div>
 
@@ -111,9 +116,9 @@ export const Search: React.FC = () => {
                 </button>
                 </div>
             )}
-          </>
+          </motion.div>
         )}
       </div>
     </div>
   );
-};
+}

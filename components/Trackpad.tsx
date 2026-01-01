@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MousePointer2, Move } from 'lucide-react';
+import { MousePointer2, Move, ArrowUpFromLine, Mouse } from 'lucide-react';
 
 export const Trackpad: React.FC = () => {
   const [cursorPos, setCursorPos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const [lastTouch, setLastTouch] = useState<{ x: number; y: number } | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const [dimensions, setDimensions] = useState({ w: 256, h: 192 });
+  const [config, setConfig] = useState({ 
+      scrollSensitivity: 2,
+      invertScroll: false,
+      showRightClick: false 
+  });
+  
   const prevHoverRef = useRef<Element | null>(null);
   
   // Load config
@@ -20,6 +27,11 @@ export const Trackpad: React.FC = () => {
                 if (parsed.trackpadWidth) {
                     setDimensions({ w: parsed.trackpadWidth, h: parsed.trackpadHeight });
                 }
+                setConfig({
+                    scrollSensitivity: parsed.scrollSensitivity || 2,
+                    invertScroll: parsed.invertScroll || false,
+                    showRightClick: parsed.showRightClick || false
+                });
             }
         } catch(e) {}
     };
@@ -39,11 +51,22 @@ export const Trackpad: React.FC = () => {
     if (!isEnabled) return;
 
     // We briefly hide the cursor to see what's under it, then show it back
-    // This needs to be very fast.
     const cursor = document.getElementById('virtual-cursor');
     if (cursor) cursor.style.display = 'none';
     const elem = document.elementFromPoint(cursorPos.x, cursorPos.y);
     if (cursor) cursor.style.display = 'block';
+
+    if (elem) {
+        // Dispatch mousemove to trigger JS based hovers that rely on movement
+        // This makes hover effects much more responsive
+        elem.dispatchEvent(new MouseEvent('mousemove', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: cursorPos.x,
+            clientY: cursorPos.y
+        }));
+    }
 
     if (elem !== prevHoverRef.current) {
         if (prevHoverRef.current) {
@@ -64,8 +87,18 @@ export const Trackpad: React.FC = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation(); // Stop event from passing through to elements behind
-    setIsDragging(true);
-    setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+
+    // Check if in scroll zone (Right 15% of trackpad)
+    if (x > rect.width * 0.85) {
+        setIsScrolling(true);
+    } else {
+        setIsDragging(true);
+    }
+
+    setLastTouch({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -75,13 +108,20 @@ export const Trackpad: React.FC = () => {
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
     
-    const deltaX = (currentX - lastTouch.x) * 2.5; // Sensitivity
-    const deltaY = (currentY - lastTouch.y) * 2.5;
+    if (isScrolling) {
+        // SCROLL MODE
+        const deltaY = (currentY - lastTouch.y) * config.scrollSensitivity;
+        window.scrollBy(0, config.invertScroll ? -deltaY : deltaY);
+    } else {
+        // CURSOR MODE
+        const deltaX = (currentX - lastTouch.x) * 2.5; 
+        const deltaY = (currentY - lastTouch.y) * 2.5;
 
-    setCursorPos(prev => ({
-        x: Math.min(Math.max(0, prev.x + deltaX), window.innerWidth),
-        y: Math.min(Math.max(0, prev.y + deltaY), window.innerHeight)
-    }));
+        setCursorPos(prev => ({
+            x: Math.min(Math.max(0, prev.x + deltaX), window.innerWidth),
+            y: Math.min(Math.max(0, prev.y + deltaY), window.innerHeight)
+        }));
+    }
 
     setLastTouch({ x: currentX, y: currentY });
   };
@@ -89,28 +129,46 @@ export const Trackpad: React.FC = () => {
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.stopPropagation();
     setIsDragging(false);
+    setIsScrolling(false);
     setLastTouch(null);
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleLeftClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    
+    e.preventDefault();
+    triggerClick('click');
+  };
+
+  const handleRightClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    triggerClick('contextmenu');
+  };
+
+  const triggerClick = (eventType: 'click' | 'contextmenu') => {
     const cursor = document.getElementById('virtual-cursor');
     if(cursor) cursor.style.display = 'none';
     const element = document.elementFromPoint(cursorPos.x, cursorPos.y);
     if(cursor) cursor.style.display = 'block';
 
     if (element) {
-        // Trigger click
-        if (element instanceof HTMLElement) {
+        if (eventType === 'click' && element instanceof HTMLElement) {
             element.click();
-            
-            // Fix for "stuck" hover on all cards:
-            // Often clicking simulates a touch which triggers :hover on devices.
-            // We can try to blur active elements immediately if they aren't inputs.
+            // Focus management for better UX
             if (document.activeElement instanceof HTMLElement && document.activeElement.tagName !== 'INPUT') {
                  document.activeElement.blur();
             }
+        } else {
+            // Right Click Logic
+            element.dispatchEvent(new MouseEvent(eventType, {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX: cursorPos.x,
+                clientY: cursorPos.y,
+                button: 2,
+                buttons: 2
+            }));
         }
     }
   };
@@ -129,39 +187,65 @@ export const Trackpad: React.FC = () => {
             transform: `translate(${cursorPos.x}px, ${cursorPos.y}px)` 
         }}
       >
-        <MousePointer2 className="w-6 h-6 text-brand-400 fill-brand-400 drop-shadow-[0_0_10px_rgba(255,0,51,0.8)]" />
+        <MousePointer2 className={`w-6 h-6 fill-brand-400 drop-shadow-[0_0_10px_rgba(255,0,51,0.8)] ${isScrolling ? 'text-white' : 'text-brand-400'}`} />
       </div>
 
       {/* Trackpad Area */}
-      <div className="fixed bottom-6 right-6 z-[9000] flex flex-col items-end gap-2 touch-none">
-         <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest bg-black/80 px-2 py-1 border border-brand-400/30 rounded-sm pointer-events-none">
-            Mouse Mode Active
+      <div className="fixed bottom-6 right-6 z-[9000] flex flex-col items-end gap-2 touch-none select-none">
+         
+         {/* Status Indicators */}
+         <div className="flex gap-2">
+            {isScrolling && (
+                <div className="text-[10px] font-bold text-black bg-brand-400 uppercase tracking-widest px-2 py-1 border border-brand-400 rounded-sm pointer-events-none animate-pulse">
+                    Scrolling
+                </div>
+            )}
+            <div className="text-[10px] font-bold text-zinc-500 bg-black/90 uppercase tracking-widest px-2 py-1 border border-dark-700 rounded-sm pointer-events-none">
+                Trackpad Active
+            </div>
          </div>
          
          <div 
-            className="bg-black/80 border-2 border-brand-400/50 rounded-lg backdrop-blur-md shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative"
+            className="bg-black/90 border border-dark-600 rounded-xl backdrop-blur-md shadow-2xl flex flex-col overflow-hidden relative transition-colors"
             style={{ width: `${dimensions.w}px`, height: `${dimensions.h}px` }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
          >
             {/* Grid Pattern */}
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAwLCA1MSwgMC4yKSIvPjwvc3ZnPg==')] opacity-30 pointer-events-none" />
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAyNTUs 2NTUsIDAuMSkiLz48L3N2Zz4=')] opacity-20 pointer-events-none" />
             
-            {/* Touch Area Label */}
-            <div className="flex-1 flex items-center justify-center text-zinc-600 pointer-events-none">
-                <Move className="w-8 h-8 opacity-20" />
+            <div className="flex flex-1 relative">
+                {/* Main Touch Area */}
+                <div className="flex-1 flex items-center justify-center text-zinc-700 pointer-events-none">
+                    <Move className="w-8 h-8 opacity-20" />
+                </div>
+
+                {/* Scroll Zone Indicator */}
+                <div className="w-[15%] h-full border-l border-white/10 bg-white/5 flex flex-col items-center justify-center gap-1">
+                    <ArrowUpFromLine className="w-3 h-3 text-zinc-600" />
+                    <div className="w-0.5 h-8 bg-zinc-800 rounded-full"></div>
+                </div>
             </div>
 
-            {/* Click Buttons */}
-            <div className="h-12 border-t border-brand-400/30 flex divide-x divide-brand-400/30">
+            {/* Buttons */}
+            <div className="h-14 border-t border-white/10 flex divide-x divide-white/10">
                 <button 
-                    className="flex-1 bg-white/5 active:bg-brand-400/20 transition-colors flex items-center justify-center text-xs font-bold text-zinc-400 uppercase tracking-wider hover:text-white"
-                    onClick={handleClick}
-                    onTouchEnd={(e) => e.stopPropagation()} // Prevent ghost touches here too
+                    className="flex-1 bg-white/5 active:bg-brand-400/20 transition-colors flex items-center justify-center text-[10px] font-bold text-zinc-400 uppercase tracking-wider hover:text-white group"
+                    onMouseDown={handleLeftClick}
+                    onTouchStart={handleLeftClick}
                 >
-                    Left Click
+                    <Mouse className="w-4 h-4 mr-2 group-active:scale-90 transition-transform" /> Left
                 </button>
+                {config.showRightClick && (
+                    <button 
+                        className="flex-1 bg-white/5 active:bg-brand-400/20 transition-colors flex items-center justify-center text-[10px] font-bold text-zinc-400 uppercase tracking-wider hover:text-white group"
+                        onMouseDown={handleRightClick}
+                        onTouchStart={handleRightClick}
+                    >
+                        <MousePointer2 className="w-4 h-4 mr-2 group-active:scale-90 transition-transform" /> Right
+                    </button>
+                )}
             </div>
          </div>
       </div>

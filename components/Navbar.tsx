@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, Bell, Compass, Calendar, Flame, Settings, LogIn, Home } from 'lucide-react';
+import { Search, Menu, X, User, Bell, Compass, Calendar, Flame, Settings, LogIn, Home, LogOut, ChevronLeft, Crown, Info, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -9,6 +10,7 @@ export const Navbar: React.FC = () => {
   const [query, setQuery] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // Handle Scroll Effect
   useEffect(() => {
@@ -41,6 +43,7 @@ export const Navbar: React.FC = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+  const isHome = location.pathname === '/';
 
   return (
     <>
@@ -48,7 +51,7 @@ export const Navbar: React.FC = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 h-20"
+        className="fixed top-0 left-0 right-0 z-50 h-14 md:h-20"
       >
         {/* Background Layer - Smooth Opacity Transition to prevent flickering */}
         <div 
@@ -60,13 +63,15 @@ export const Navbar: React.FC = () => {
         {/* Gradient Overlay for Top Visibility (Always visible slightly for contrast) */}
         <div className={`absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${isScrolled ? 'opacity-0' : 'opacity-100'}`} />
 
-        <div className="relative z-20 max-w-[1600px] mx-auto px-4 md:px-8 h-full">
-          <div className="flex items-center h-full gap-8">
+        <div className="relative z-20 max-w-[1600px] mx-auto px-3 md:px-8 h-full">
+          <div className="flex items-center h-full gap-3 md:gap-8">
             
-            {/* Left: Logo & Links - Fixed Flex */}
-            <div className="flex items-center gap-11 flex-shrink-0">
-              <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200">
-                <Home className="w-7 h-7" strokeWidth={2.0} />
+            {/* Left: Logo & Nav (Desktop Only - Completely Hidden on Mobile) */}
+            <div className="hidden md:flex items-center gap-12 flex-shrink-0">
+              
+              {/* Logo */}
+              <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200 block">
+                <Home className="w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
               </Link>
 
               {/* Desktop Navigation */}
@@ -85,17 +90,17 @@ export const Navbar: React.FC = () => {
               </div>
             </div>
 
-            {/* Center: Search - Stretches to fill space */}
-            <div className="hidden md:flex flex-1 items-center justify-end max-w-4xl mx-auto">
-              <form onSubmit={handleSearch} className="w-full relative group +mt-0">
-                <div className={`relative flex items-center border rounded-none px-4 py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
-                  <Search className="w-4 h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
+            {/* Center: Search - Stretched on Mobile */}
+            <div className="flex flex-1 items-center justify-start md:justify-end max-w-4xl mx-auto">
+              <form onSubmit={handleSearch} className="w-full relative group mt-0 md:mt-3">
+                <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
+                  <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="SEARCH"
-                    className="bg-transparent border-none outline-none text-base text-white placeholder-zinc-600 ml-3 w-full skew-x-[12deg] font-mono tracking-wider uppercase"
+                    placeholder="SEARCH..."
+                    className="bg-transparent border-none outline-none text-xs md:text-base text-white placeholder-zinc-600 ml-2 md:ml-3 w-full skew-x-[12deg] font-mono tracking-wider uppercase"
                   />
                   {/* Subtle Corner Accents */}
                   <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-brand-400 opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
@@ -105,10 +110,18 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Right: Actions - Fixed Flex */}
-            <div className="flex items-center gap-4 md:gap-6 flex-shrink-0 ml-auto md:ml-0">
+            <div className="flex items-center gap-2 md:gap-6 flex-shrink-0 ml-auto md:ml-0">
               
-              {/* Icons */}
+              {/* Desktop Icons */}
               <div className="hidden md:flex items-center gap-6">
+                
+                {/* Benefits Link for Guests */}
+                {!user && (
+                  <Link to="/benefits" className="flex items-center gap-2 text-amber-400 hover:text-amber-200 transition-colors text-xs font-bold uppercase tracking-wider">
+                      <Crown className="w-4 h-4" /> Go Pro
+                  </Link>
+                )}
+
                 <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group">
                     <Bell className="w-5 h-5 group-hover:animate-ping absolute opacity-30" />
                     <Bell className="w-5 h-5 relative z-10" />
@@ -117,19 +130,36 @@ export const Navbar: React.FC = () => {
                 <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors">
                    <Settings className="w-5 h-5 hover:rotate-180 transition-transform duration-700" />
                 </Link>
-                <button className="flex items-center gap-2 bg-brand-400 hover:bg-white text-black px-6 py-2 text-xs font-black uppercase tracking-widest transition-all skew-x-[-12deg] clip-path-polygon hover:scale-105 shadow-[0_0_15px_rgba(255,0,51,0.4)]">
-                    <span className="skew-x-[12deg] flex items-center gap-2">
-                        <User className="w-4 h-4" /> Login
-                    </span>
-                </button>
+                
+                {user ? (
+                   <div className="flex items-center gap-3">
+                      <Link to="/profile" className="flex flex-col items-end mr-1 hover:opacity-80 transition-opacity group">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider group-hover:text-brand-400">Profile</span>
+                          <span className="text-xs font-bold text-white uppercase">{user.email?.split('@')[0]}</span>
+                      </Link>
+                      <button 
+                        onClick={logout}
+                        className="bg-zinc-800 hover:bg-brand-400 text-white hover:text-black p-2 transition-all skew-x-[-12deg]"
+                        title="Logout"
+                      >
+                         <LogOut className="w-4 h-4 skew-x-[12deg]" />
+                      </button>
+                   </div>
+                ) : (
+                  <Link to="/login" className="flex items-center gap-2 bg-brand-400 hover:bg-white text-black px-6 py-2 text-xs font-black uppercase tracking-widest transition-all skew-x-[-12deg] clip-path-polygon hover:scale-105 shadow-[0_0_15px_rgba(255,0,51,0.4)]">
+                      <span className="skew-x-[12deg] flex items-center gap-2">
+                          <User className="w-4 h-4" /> Login
+                      </span>
+                  </Link>
+                )}
               </div>
 
               {/* Mobile Toggle */}
               <button 
                 onClick={() => setIsMobileOpen(true)}
-                className="lg:hidden text-white p-2 hover:text-brand-400 transition-colors border border-white/10 bg-white/5 skew-x-[-10deg]"
+                className="lg:hidden text-white p-1.5 md:p-2 hover:text-brand-400 transition-colors border border-white/10 bg-white/5 skew-x-[-10deg]"
               >
-                <Menu className="w-6 h-6 skew-x-[10deg]" />
+                <Menu className="w-5 h-5 md:w-6 md:h-6 skew-x-[10deg]" />
               </button>
             </div>
           </div>
@@ -171,20 +201,6 @@ export const Navbar: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Mobile Search - Ensure text-base here too */}
-                <form onSubmit={handleSearch} className="mb-8">
-                  <div className="relative group">
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="SEARCH DATABASE..."
-                        className="w-full bg-zinc-900 border border-zinc-800 text-white px-4 py-3 pl-11 rounded-none focus:border-brand-400 focus:bg-black outline-none transition-colors skew-x-[-5deg] font-mono text-base uppercase"
-                    />
-                    <Search className="absolute left-3 top-3.5 w-5 h-5 text-zinc-500 group-focus-within:text-brand-400" />
-                  </div>
-                </form>
-
                 {/* Mobile Links */}
                 <div className="space-y-1">
                     <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-4 opacity-70 border-b border-brand-400/20 pb-1">Navigation Module</div>
@@ -204,15 +220,45 @@ export const Navbar: React.FC = () => {
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-white/5 space-y-2">
-                    <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-4 opacity-70 border-b border-brand-400/20 pb-1">User System</div>
+                    <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-4 opacity-70 border-b border-brand-400/20 pb-1">System & Info</div>
+                    
+                    <Link to="/documentation" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
+                        <Info className="w-5 h-5" />
+                        <span className="font-bold uppercase tracking-wider">How It Works</span>
+                    </Link>
+                    <Link to="/api-docs" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
+                        <Code className="w-5 h-5" />
+                        <span className="font-bold uppercase tracking-wider">API Docs</span>
+                    </Link>
                     <Link to="/admin" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
                         <Settings className="w-5 h-5" />
                         <span className="font-bold uppercase tracking-wider">Config</span>
                     </Link>
-                     <button className="w-full flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all text-left border-l-2 border-transparent hover:border-white">
-                        <LogIn className="w-5 h-5" />
-                        <span className="font-bold uppercase tracking-wider">Authenticate</span>
-                    </button>
+                    
+                    {!user && (
+                         <Link to="/benefits" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-amber-400 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
+                            <Crown className="w-5 h-5" />
+                            <span className="font-bold uppercase tracking-wider">Benefits</span>
+                        </Link>
+                    )}
+                    
+                    {user ? (
+                        <>
+                            <Link to="/profile" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
+                                <User className="w-5 h-5" />
+                                <span className="font-bold uppercase tracking-wider">Profile</span>
+                            </Link>
+                            <button onClick={logout} className="w-full flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all text-left border-l-2 border-transparent hover:border-white">
+                            <LogOut className="w-5 h-5" />
+                            <span className="font-bold uppercase tracking-wider">Logout</span>
+                            </button>
+                        </>
+                    ) : (
+                        <Link to="/login" className="w-full flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all text-left border-l-2 border-transparent hover:border-white">
+                            <LogIn className="w-5 h-5" />
+                            <span className="font-bold uppercase tracking-wider">Authenticate</span>
+                        </Link>
+                    )}
                 </div>
                 
                 {/* Decorative Bottom */}

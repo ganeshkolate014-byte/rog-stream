@@ -1,4 +1,3 @@
-
 // Generic API Wrapper
 export interface ApiResponse<T> {
   success: boolean;
@@ -145,19 +144,34 @@ export interface SearchResult {
 export interface CategoryResult {
   animes?: Anime[];
   response?: Anime[];
+  results?: Anime[]; // Added results support
   currentPage: number;
   hasNextPage: boolean;
   totalPages: number;
+  pageInfo?: {
+    totalPages: number;
+    currentPage: number;
+    hasNextPage: boolean;
+  };
 }
 
-export interface ScheduleAnime {
+// New Schedule Types
+export interface ScheduleItem {
   id: string;
-  time: string;
   title: string;
-  image: string;
+  japaneseTitle: string;
+  url: string;
+  airingEpisode: string;
+  airingTime: string;
 }
 
-export interface ScheduleDay {
-  day: string;
-  animes: ScheduleAnime[];
+export interface ScheduleResponse {
+  results: ScheduleItem[];
+}
+
+
+// New Type for AI Chat
+export interface ChatMessage {
+    role: 'user' | 'model';
+    text: string;
 }

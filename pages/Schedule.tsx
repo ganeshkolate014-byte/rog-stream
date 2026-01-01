@@ -1,87 +1,118 @@
-import React, { useState } from 'react';
-import { useApi } from '../services/api';
-import { ScheduleDay } from '../types';
+import React from 'react';
+import { useApi, constructUrl } from '../services/api';
+import { ScheduleResponse, ScheduleItem } from '../types';
 import { motion } from 'framer-motion';
-import { Clock, Loader2 } from 'lucide-react';
+import { Calendar, ChevronRight, AlertCircle, PlayCircle, Hash } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ScheduleSkeleton } from '../components/Skeletons';
+
+const ScheduleCard: React.FC<{ item: ScheduleItem, index: number, isLast: boolean }> = ({ item, index, isLast }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className={`flex gap-4 md:gap-8 relative pl-6 md:pl-8 ${!isLast ? 'pb-8 md:pb-12' : ''}`}
+        >
+            {/* Timeline Line */}
+            {!isLast && (
+                <div className="absolute left-[11px] md:left-[15px] top-3 bottom-0 w-[1px] bg-gradient-to-b from-brand-400 via-white/10 to-transparent" />
+            )}
+            
+            {/* Timeline Dot */}
+            <div className="absolute left-[6px] md:left-[10px] top-1.5 w-3 h-3 rounded-full bg-dark-950 border-2 border-brand-400 z-10 shadow-[0_0_10px_rgba(255,0,51,0.5)] group-hover:scale-125 transition-transform" />
+
+            {/* Time Column */}
+            <div className="w-16 md:w-24 flex-shrink-0 flex flex-col items-start pt-0.5">
+                <span className="text-xl md:text-2xl font-black text-white font-mono tracking-tighter leading-none">
+                    {item.airingTime}
+                </span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">
+                    JST
+                </span>
+            </div>
+
+            {/* Content Card */}
+            <div className="flex-1 min-w-0">
+                <Link 
+                    to={`/anime/${item.id}`} 
+                    className="block bg-dark-900/50 hover:bg-dark-800 border border-white/5 hover:border-brand-400/50 p-5 transition-all group relative overflow-hidden rounded-sm"
+                >
+                    {/* Hover Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-400/0 via-brand-400/0 to-brand-400/5 group-hover:via-brand-400/5 transition-all duration-500" />
+                    
+                    <div className="relative z-10 flex justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-lg md:text-xl font-bold text-white truncate group-hover:text-brand-400 transition-colors">
+                                {item.title}
+                            </h3>
+                            <p className="text-sm text-zinc-400 truncate font-medium mt-1">
+                                {item.japaneseTitle}
+                            </p>
+                            
+                            <div className="flex flex-wrap items-center gap-3 mt-4">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-brand-400/10 border border-brand-400/20 rounded-sm text-xs font-bold text-brand-400 font-mono">
+                                    <Hash className="w-3 h-3" />
+                                    {item.airingEpisode.replace('Episode ', 'EP ')}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-zinc-800 border border-white/5 rounded-sm text-xs font-bold text-zinc-400 uppercase tracking-wider group-hover:bg-zinc-700 transition-colors">
+                                    <PlayCircle className="w-3 h-3" />
+                                    Watch
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex-shrink-0 self-center hidden sm:block">
+                            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-400 group-hover:bg-brand-400 transition-all transform group-hover:rotate-[-45deg]">
+                                <ChevronRight className="w-5 h-5 text-zinc-500 group-hover:text-black transition-colors" />
+                            </div>
+                        </div>
+                    </div>
+                </Link>
+            </div>
+        </motion.div>
+    );
+};
+
 
 export const Schedule: React.FC = () => {
-  const { data: scheduleData, isLoading } = useApi<ScheduleDay[]>('/schedule');
-  const [activeDay, setActiveDay] = useState<string>('');
-  
-  const schedule = scheduleData || [];
-  
-  // Set default active day once data is loaded
-  React.useEffect(() => {
-    if (schedule.length > 0 && !activeDay) {
-        setActiveDay(schedule[0].day);
-    }
-  }, [schedule, activeDay]);
-
-  const currentDaySchedule = schedule.find(s => s.day === activeDay);
+  const { data: scheduleResponse, isLoading, error } = useApi<ScheduleResponse>(constructUrl('schedule'));
+  const schedule = scheduleResponse?.results || [];
 
   return (
-    <div className="min-h-screen bg-dark-900 pt-24 px-4 pb-12">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-8 border-l-4 border-brand-500 pl-4">Simulcast Schedule</h1>
+    <div className="min-h-screen bg-dark-950 pt-24 px-4 pb-20 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-400/5 blur-[120px] rounded-full pointer-events-none" />
+      
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="mb-12">
+            <h1 className="text-4xl md:text-6xl font-black text-white italic font-display uppercase tracking-tighter flex items-center gap-3 mb-2">
+                <Calendar className="w-8 h-8 md:w-12 md:h-12 text-brand-400" />
+                <span>On <span className="text-brand-400">Air</span></span>
+            </h1>
+            <p className="text-zinc-400 font-sans text-sm md:text-base max-w-lg border-l-2 border-brand-400 pl-4 ml-2">
+                Stay up to date with the latest episodes airing today in Japan. Times are displayed in JST.
+            </p>
+        </div>
 
         {isLoading ? (
-            <div className="flex justify-center py-20">
-                <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+            <ScheduleSkeleton />
+        ) : error ? (
+            <div className="flex flex-col items-center text-center py-20 bg-red-900/10 border border-red-500/20 rounded-lg">
+                <AlertCircle className="w-10 h-10 text-red-500 mb-4" />
+                <h2 className="text-xl font-bold text-white uppercase">Failed to Load Schedule</h2>
+                <p className="text-zinc-400 mt-2 font-mono text-sm">{error.message}</p>
+            </div>
+        ) : schedule.length > 0 ? (
+            <div className="space-y-0">
+                {schedule.map((item, idx) => (
+                    <ScheduleCard key={item.id} item={item} index={idx} isLast={idx === schedule.length - 1} />
+                ))}
             </div>
         ) : (
-            <>
-                {/* Day Selector */}
-                <div className="flex flex-wrap gap-2 mb-8 bg-zinc-800 p-2 rounded-xl">
-                {schedule.map((day) => (
-                    <button
-                    key={day.day}
-                    onClick={() => setActiveDay(day.day)}
-                    className={`flex-1 min-w-[100px] py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${
-                        activeDay === day.day
-                        ? 'bg-brand-600 text-white shadow-lg'
-                        : 'text-gray-400 hover:text-white hover:bg-zinc-700'
-                    }`}
-                    >
-                    {day.day}
-                    </button>
-                ))}
-                </div>
-
-                {/* Episodes Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {currentDaySchedule?.animes.map((item, idx) => (
-                    <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-zinc-800 rounded-lg p-4 flex gap-4 hover:bg-zinc-700 transition-colors group"
-                    >
-                    <div className="w-16 h-24 flex-shrink-0 rounded-md overflow-hidden">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-col justify-center flex-1">
-                        <div className="flex items-center text-brand-400 text-sm font-bold mb-1">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {item.time}
-                        </div>
-                        <Link to={`/anime/${item.id}`}>
-                            <h3 className="text-white font-medium group-hover:text-brand-500 transition-colors line-clamp-2">
-                            {item.title}
-                            </h3>
-                        </Link>
-                        <span className="text-xs text-gray-500 mt-2">New Episode</span>
-                    </div>
-                    </motion.div>
-                ))}
-                {(!currentDaySchedule || currentDaySchedule.animes.length === 0) && (
-                    <div className="col-span-full text-center py-20 text-gray-500">
-                    No schedule data available for this day.
-                    </div>
-                )}
-                </div>
-            </>
+            <div className="text-center py-20 bg-dark-900 border border-dark-700 rounded-lg">
+                <p className="text-zinc-500 font-bold uppercase tracking-widest">No schedule data available for today.</p>
+            </div>
         )}
       </div>
     </div>
