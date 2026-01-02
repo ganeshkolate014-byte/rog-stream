@@ -122,7 +122,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
         if (!video) return;
 
         const onTimeUpdate = () => {
-            if (video.duration && !transitionTriggeredRef.current && video.duration - video.currentTime <= 3) {
+            if (video.duration && !transitionTriggeredRef.current && video.duration - video.currentTime <= 5) {
                 transitionTriggeredRef.current = true;
                 handleNext();
             }
