@@ -1,3 +1,4 @@
+
 import { useQuery, useInfiniteQuery, UseQueryOptions } from "@tanstack/react-query";
 import axios from "axios";
 import { ApiResponse } from "../types";
@@ -8,7 +9,7 @@ export const DEFAULT_CONFIG = {
   apiKey: "", // For Anime Backend
   geminiApiKey: "", // For Google Gemini AI
   endpoints: {
-    home: "https://backendweb-bifc.onrender.com/api/v1/home", // Specific URL for Home
+    home: "https://backendweb-ivory.vercel.app/api/v1/home", // Updated to new hosting
     search: "/anime/hianime/{keyword}", // New search structure
     details: "/anime/hianime/info?id={id}", 
     episodes: "/anime/episodes/{id}", 

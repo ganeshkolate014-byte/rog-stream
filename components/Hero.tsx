@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Bookmark, Volume2 } from 'lucide-react';
@@ -10,6 +11,14 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ items }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayItems, setDisplayItems] = useState<Anime[]>([]);
+  const currentIndexRef = useRef(currentIndex);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const transitionTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
   
   // UI Config State with defaults
   const [config, setConfig] = useState({
@@ -39,13 +48,99 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
     }
   }, []);
 
+  // Preloading and display logic
   useEffect(() => {
-    if (items.length === 0) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % items.length);
-    }, config.interval); // Use config.interval
-    return () => clearInterval(interval);
-  }, [items, config.interval]);
+    if (!items || items.length === 0) {
+        setDisplayItems([]);
+        return;
+    }
+
+    const imageSlides = items.filter(item => item.posterType !== 'video');
+    const videoSlides = items.filter(item => item.posterType === 'video');
+
+    // Initially display only images, or all if no images exist.
+    setDisplayItems(imageSlides.length > 0 ? imageSlides : items);
+    setCurrentIndex(0); // Reset index when items change
+
+    const videosToLoad = [...videoSlides];
+    
+    const loadNextVideo = () => {
+        if (videosToLoad.length === 0) return;
+        const videoSlide = videosToLoad.shift();
+        
+        if (videoSlide && videoSlide.poster) {
+            const videoEl = document.createElement('video');
+            videoEl.src = videoSlide.poster; // Full quality URL
+            
+            videoEl.oncanplaythrough = () => {
+                setDisplayItems(currentDisplayItems => {
+                    // Avoid adding duplicates
+                    if (currentDisplayItems.some(item => item.id === videoSlide.id)) {
+                        return currentDisplayItems;
+                    }
+                    const newItems = [...currentDisplayItems];
+                    // Insert after the currently visible slide
+                    const insertAt = Math.min(currentIndexRef.current + 1, newItems.length);
+                    newItems.splice(insertAt, 0, videoSlide);
+                    return newItems;
+                });
+                loadNextVideo(); // Load next video in sequence
+            };
+
+            videoEl.onerror = () => {
+                console.error('Failed to preload video:', videoSlide.poster);
+                loadNextVideo(); // Try next one anyway
+            };
+        } else {
+            loadNextVideo(); // Skip if no video slide or poster
+        }
+    };
+
+    if (videoSlides.length > 0) {
+        loadNextVideo();
+    }
+  // We only want this effect to run when the input `items` change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
+
+  const handleNext = useCallback(() => {
+    if (displayItems.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % displayItems.length);
+  }, [displayItems.length]);
+
+  // Slide Timer and Early Video Transition Logic
+  useEffect(() => {
+    if (displayItems.length <= 1) return;
+    
+    const currentItem = displayItems[currentIndex];
+    const isVideo = currentItem?.posterType === 'video';
+    
+    transitionTriggeredRef.current = false; // Reset trigger on every slide change
+
+    if (isVideo) {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const onTimeUpdate = () => {
+            if (video.duration && !transitionTriggeredRef.current && video.duration - video.currentTime <= 1) {
+                transitionTriggeredRef.current = true;
+                handleNext();
+            }
+        };
+
+        video.addEventListener('timeupdate', onTimeUpdate);
+        return () => video.removeEventListener('timeupdate', onTimeUpdate);
+
+    } else {
+        // Fallback to interval for images
+        const interval = setInterval(() => {
+            handleNext();
+        }, config.interval);
+
+        return () => clearInterval(interval);
+    }
+  }, [displayItems, currentIndex, config.interval, handleNext]);
+
 
   // Helper to get Tailwind classes based on size setting (Updated for mobile density)
   const getTitleSizeClasses = (size: string) => {
@@ -68,11 +163,12 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
     }
   };
 
-  if (!items || items.length === 0) return null;
-  const current = items[currentIndex];
+  if (!displayItems || displayItems.length === 0) return null;
+  const current = displayItems[currentIndex];
 
   // Fallback if banner is missing, prioritize banner for 16:9
   const heroImage = current.banner || current.image || current.poster;
+  const isVideo = current.posterType === 'video';
 
   return (
     <div className={`relative w-full ${getAspectRatioClass()} overflow-hidden bg-[#050505] group font-sans transition-all duration-500`}>
@@ -85,23 +181,37 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           transition={{ duration: 0.8 }}
           className="absolute inset-0"
         >
-           {/* Layer 1: Background Image */}
+           {/* Layer 1: Background Image or Video */}
            <div className="absolute inset-0">
-                <img
-                  src={heroImage}
-                  alt={current.title}
-                  className="w-full h-full object-cover object-center"
-                />
+                {isVideo ? (
+                    <video
+                        ref={videoRef}
+                        key={heroImage} // Key helps React re-mount the video element
+                        src={heroImage}
+                        autoPlay
+                        muted
+                        playsInline
+                        onEnded={handleNext} 
+                        className="w-full h-full object-cover object-center"
+                    />
+                ) : (
+                    <img
+                        src={heroImage}
+                        alt={current.title}
+                        className="w-full h-full object-cover object-center"
+                    />
+                )}
+                
                  {/* Vignette / Gradients - OPTIMIZED FOR PERFECT FADE */}
                  
-                 {/* 1. Left Gradient (Main Text Backdrop) - Wide and Smooth */}
-                 <div className="absolute inset-y-0 left-0 w-full md:w-[65%] bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent" />
+                 {/* 1. Left Gradient (Main Text Backdrop) - Reduced intensity */}
+                 <div className="absolute inset-y-0 left-0 w-full md:w-[60%] bg-gradient-to-r from-[#050505]/95 via-[#050505]/70 to-transparent" />
                  
-                 {/* 2. Bottom Gradient (Seamless Blend) - Reduced opacity for cleaner look */}
-                 <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                 {/* 2. Bottom Gradient (Seamless Blend) - Further reduced for subtlety */}
+                 <div className="absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-[#050505] via-[#050505]/30 to-transparent" />
                  
                  {/* 3. Base Gradient to ensure footer connection (very subtle) */}
-                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#050505] to-transparent" />
+                 <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#050505]/90 to-transparent" />
 
                  {/* 4. Top Gradient (Navbar Visibility) */}
                  <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#050505]/80 to-transparent" />
@@ -151,17 +261,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                   </div>
                 </motion.div>
 
-                {/* Description - Optional for Hero but looks good on large screens */}
-                {current.description && (
-                   <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.35 }}
-                      className="text-zinc-400 text-sm line-clamp-2 md:line-clamp-3 mb-4 md:mb-6 max-w-lg hidden md:block font-medium shadow-black drop-shadow-md"
-                   >
-                      {current.description}
-                   </motion.p>
-                )}
+                {/* Description REMOVED as requested */}
 
                 {/* Action Buttons */}
                 <motion.div 
@@ -189,11 +289,11 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
         </motion.div>
       </AnimatePresence>
       
-      {/* Navigation Indicators */}
-      <div className="absolute right-4 bottom-4 md:right-6 md:bottom-6 z-40 flex flex-col gap-2">
-          {items.map((_, idx) => (
+      {/* Navigation Indicators - Position Updated */}
+      <div className="absolute right-4 bottom-12 md:right-6 md:bottom-16 z-40 flex flex-col gap-2">
+          {displayItems.map((item, idx) => (
               <button 
-                  key={idx}
+                  key={`${item.id}-${idx}`}
                   onClick={() => setCurrentIndex(idx)}
                   className={`w-1 md:w-1.5 h-1 md:h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-brand-400 h-4 md:h-6' : 'bg-white/30 hover:bg-white'}`}
               />

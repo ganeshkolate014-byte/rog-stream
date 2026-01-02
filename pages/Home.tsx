@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
@@ -152,6 +153,68 @@ const ContinueWatchingSection: React.FC = () => {
 export const Home: React.FC = () => {
   const { data, isLoading, isError, error } = useApi<HomeData>(constructUrl('home'));
   const { data: genresData } = useApi<string[]>(constructUrl('genres')); // Fetch genres dynamically
+  
+  const [customSlides, setCustomSlides] = useState<Anime[]>([]);
+
+  // Fetch Custom Slides Logic
+  useEffect(() => {
+    const loadCustomSlides = async () => {
+      const storedUrls = localStorage.getItem('custom_hero_urls');
+      
+      // Default URL if not set
+      const defaultUrl = 'https://res.cloudinary.com/dj5hhott5/raw/upload/v1767375104/heroslides_data.json';
+      const urls: string[] = storedUrls ? JSON.parse(storedUrls) : [defaultUrl];
+
+      if (!urls || urls.length === 0) {
+          setCustomSlides([]);
+          return;
+      }
+
+      const promises = urls.map(async (url: string) => {
+          try {
+              const res = await fetch(url);
+              if (!res.ok) return []; // Return empty array on network failure
+              
+              const responseData = await res.json();
+              
+              // Handle new JSON structure with a 'data' and 'spotlight' key
+              if (!responseData.success || !Array.isArray(responseData.data?.spotlight)) {
+                  console.warn("Custom slide data structure is invalid for URL:", url);
+                  return [];
+              }
+              
+              // Map over the spotlight array inside the response
+              return responseData.data.spotlight.map((data: any) => ({
+                  id: data.id,
+                  title: data.title,
+                  poster: data.poster,
+                  image: data.poster,
+                  banner: data.poster,
+                  description: data.synopsis,
+                  rank: data.rank,
+                  type: data.type,
+                  year: data.aired,
+                  episodes: {
+                      sub: data.episodes?.sub,
+                      dub: data.episodes?.dub,
+                      eps: data.episodes?.eps
+                  },
+                  posterType: data.posterType || 'image'
+              } as Anime));
+
+          } catch (e) {
+              console.error("Failed to load or parse custom slide", url, e);
+              return []; // Return empty array on error
+          }
+      });
+      
+      const results = await Promise.all(promises);
+      const validSlides = results.flat(); // Flatten the array of arrays (e.g., [[anime1], [anime2, anime3]] -> [anime1, anime2, anime3])
+      setCustomSlides(validSlides);
+    };
+
+    loadCustomSlides();
+  }, []);
 
   if (isLoading) return <HomeSkeleton />;
   if (isError) return (
@@ -162,7 +225,9 @@ export const Home: React.FC = () => {
       </div>
   );
 
-  const spotlight = data?.spotlight || data?.spotlightAnimes || [];
+  // Combine custom slides (fetched externally) with API spotlight slides
+  const spotlight = [...customSlides, ...(data?.spotlight || data?.spotlightAnimes || [])];
+  
   const trending = data?.trending || data?.trendingAnimes || [];
   const topAiring = data?.topAiring || data?.topAiringAnimes || [];
   const topUpcoming = data?.topUpcoming || data?.topUpcomingAnimes || [];

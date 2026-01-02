@@ -1,3 +1,4 @@
+
 // Generic API Wrapper
 export interface ApiResponse<T> {
   success: boolean;
@@ -24,6 +25,7 @@ export interface Anime {
   };
   episodesCount?: number;
   year?: string | number;
+  posterType?: 'image' | 'video'; // Added for Hero Video Support
 }
 
 export interface HistoryItem {

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move, Mouse, Sliders, Key, Bot } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move, Mouse, Sliders, Key, Bot, ImagePlus, Trash2, Plus } from 'lucide-react';
 import { DEFAULT_CONFIG, getConfig } from '../services/api';
 import axios from 'axios';
 
@@ -21,6 +22,10 @@ export const Admin: React.FC = () => {
       showRightClick: false // Option to show right click button
   });
   
+  // Custom Hero URLs Management
+  const [heroUrls, setHeroUrls] = useState<string[]>([]);
+  const [newUrl, setNewUrl] = useState('');
+  
   const [testResult, setTestResult] = useState<{ status: string; message: string; data?: any } | null>(null);
   const [testEndpoint, setTestEndpoint] = useState('/home');
   const [isSaved, setIsSaved] = useState(false);
@@ -28,13 +33,24 @@ export const Admin: React.FC = () => {
   useEffect(() => {
     // Load API config
     setConfig(getConfig());
+    
     // Load UI config
     try {
         const storedUi = localStorage.getItem('ui_config');
         if (storedUi) {
             const parsed = JSON.parse(storedUi);
-            // Merge with defaults to ensure new fields exist if loading old config
             setUiConfig(prev => ({ ...prev, ...parsed }));
+        }
+    } catch (e) {}
+
+    // Load Hero URLs
+    try {
+        const storedUrls = localStorage.getItem('custom_hero_urls');
+        if (storedUrls) {
+            setHeroUrls(JSON.parse(storedUrls));
+        } else {
+            // Default Slide (Updated to valid raw JSON)
+            setHeroUrls(['https://res.cloudinary.com/dj5hhott5/raw/upload/v1767375104/heroslides_data.json']);
         }
     } catch (e) {}
   }, []);
@@ -43,6 +59,8 @@ export const Admin: React.FC = () => {
     try {
       localStorage.setItem('api_config', JSON.stringify(config));
       localStorage.setItem('ui_config', JSON.stringify(uiConfig));
+      localStorage.setItem('custom_hero_urls', JSON.stringify(heroUrls));
+      
       setIsSaved(true);
       
       // Dispatch custom event to update Trackpad immediately without reload
@@ -61,6 +79,8 @@ export const Admin: React.FC = () => {
     if(window.confirm("Are you sure you want to reset all settings to default?")) {
       localStorage.removeItem('api_config');
       localStorage.removeItem('ui_config');
+      localStorage.removeItem('custom_hero_urls');
+      
       setConfig(DEFAULT_CONFIG);
       setUiConfig({ 
           slideInterval: 8000,
@@ -75,6 +95,9 @@ export const Admin: React.FC = () => {
           invertScroll: false,
           showRightClick: false
       });
+      // Reset URL list to default
+      setHeroUrls(['https://res.cloudinary.com/dj5hhott5/raw/upload/v1767375104/heroslides_data.json']);
+      
       window.location.reload();
     }
   };
@@ -85,6 +108,17 @@ export const Admin: React.FC = () => {
     window.crypto.getRandomValues(array);
     const key = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
     setConfig(prev => ({ ...prev, apiKey: `ak_${key}` }));
+  };
+
+  const addHeroUrl = () => {
+      if (newUrl && !heroUrls.includes(newUrl)) {
+          setHeroUrls([...heroUrls, newUrl]);
+          setNewUrl('');
+      }
+  };
+
+  const removeHeroUrl = (urlToRemove: string) => {
+      setHeroUrls(heroUrls.filter(url => url !== urlToRemove));
   };
 
   const runTest = async () => {
@@ -142,6 +176,52 @@ export const Admin: React.FC = () => {
             {/* Configuration Column */}
             <div className="space-y-6">
                 
+                {/* Hero Slides Configuration (NEW) */}
+                <div className="bg-dark-900 border border-dark-700 p-6 relative">
+                    <h2 className="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2 border-b border-dark-700 pb-2">
+                        <ImagePlus className="w-4 h-4 text-brand-400" /> Hero Slider Config
+                    </h2>
+                    
+                    <div className="mb-4">
+                        <label className="text-xs font-bold text-zinc-400 uppercase mb-1 block">Add Custom Slide (JSON URL)</label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="text" 
+                                value={newUrl}
+                                onChange={(e) => setNewUrl(e.target.value)}
+                                className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-2 text-sm focus:border-brand-400 outline-none"
+                                placeholder="https://api.example.com/slide.json"
+                            />
+                            <button 
+                                onClick={addHeroUrl}
+                                className="px-3 bg-brand-400 text-black hover:bg-white transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-dark-600">
+                        {heroUrls.map((url, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-dark-800 p-2 border border-dark-600 rounded-sm">
+                                <span className="text-xs font-mono text-zinc-400 truncate flex-1 mr-2" title={url}>{url}</span>
+                                <button 
+                                    onClick={() => removeHeroUrl(url)}
+                                    className="text-zinc-500 hover:text-red-500 transition-colors"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ))}
+                         {heroUrls.length === 0 && (
+                            <p className="text-[10px] text-zinc-500 italic">No custom slides added.</p>
+                        )}
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-2">
+                        These APIs are fetched and merged with the spotlight anime list on the Home page.
+                    </p>
+                </div>
+
                 {/* Input Mode Settings */}
                 <div className="bg-dark-900 border border-dark-700 p-6 relative">
                     <h2 className="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2 border-b border-dark-700 pb-2">
