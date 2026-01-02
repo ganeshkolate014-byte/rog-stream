@@ -171,7 +171,6 @@ export const Watch: React.FC = () => {
                         changeEpisode={handleNavigate}
                         hasPrevEp={!!prevEp}
                         hasNextEp={!!nextEp}
-                        nextEp={nextEp}
                     />
                 </div>
 

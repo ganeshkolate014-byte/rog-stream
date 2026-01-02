@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Monitor, Globe, Info, AlertTriangle, List, Maximize2, Minimize2, Play, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Monitor, Globe, Info, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 import { Episode } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface VideoPlayerProps {
   episodeId: string;
   currentEp: Episode;
-  nextEp?: Episode;
   changeEpisode: (direction: 'prev' | 'next') => void;
   hasNextEp: boolean;
   hasPrevEp: boolean;
@@ -16,71 +14,28 @@ interface VideoPlayerProps {
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   episodeId,
   currentEp,
-  nextEp,
   changeEpisode,
   hasNextEp,
   hasPrevEp,
 }) => {
-  const [category, setCategory] = useState<'sub' | 'dub'>('sub');
-  const [server, setServer] = useState<'vidWish' | 'megaPlay'>('megaPlay');
-  const [isWebFullscreen, setIsWebFullscreen] = useState(false);
-  const [isAutoplayEnabled, setIsAutoplayEnabled] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
-
-  // FIX: Use `number` for timer IDs in browser environments instead of `NodeJS.Timeout`.
-  const autoplayTimerRef = useRef<number | null>(null);
-  const countdownTimerRef = useRef<number | null>(null);
-
-  // NOTE: Since the iframe doesn't expose video duration, we assume a standard episode length.
-  const ASSUMED_DURATION_SECONDS = 23 * 60; // 23 minutes
-  const COUNTDOWN_SECONDS = 5;
-
-  // Load/Save autoplay setting from localStorage
-  useEffect(() => {
-    const savedState = localStorage.getItem('autoplay_enabled');
-    setIsAutoplayEnabled(savedState === 'true');
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('autoplay_enabled', String(isAutoplayEnabled));
-  }, [isAutoplayEnabled]);
+  // Persist player settings (sub/dub, server) in localStorage
+  const [category, setCategory] = useState<'sub' | 'dub'>(() => {
+    return (localStorage.getItem('video_category') as 'sub' | 'dub') || 'sub';
+  });
+  const [server, setServer] = useState<'vidWish' | 'megaPlay'>(() => {
+    return (localStorage.getItem('video_server') as 'vidWish' | 'megaPlay') || 'megaPlay';
+  });
   
-  const cancelAutoplay = useCallback(() => {
-    if (autoplayTimerRef.current) clearTimeout(autoplayTimerRef.current);
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    setCountdown(null);
-  }, []);
-
-  // Effect to start the main autoplay timer
+  const [isWebFullscreen, setIsWebFullscreen] = useState(false);
+  
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    cancelAutoplay(); // Reset on episode change or toggle change
+    localStorage.setItem('video_category', category);
+  }, [category]);
 
-    if (isAutoplayEnabled && hasNextEp) {
-      autoplayTimerRef.current = setTimeout(() => {
-        setCountdown(COUNTDOWN_SECONDS);
-      }, (ASSUMED_DURATION_SECONDS - COUNTDOWN_SECONDS) * 1000);
-    }
-    
-    return () => cancelAutoplay();
-  }, [episodeId, isAutoplayEnabled, hasNextEp, cancelAutoplay]);
-
-  // Effect to handle the countdown itself
   useEffect(() => {
-    if (countdown !== null) {
-      if (countdown <= 0) {
-        if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-        changeEpisode('next');
-      } else {
-        countdownTimerRef.current = setInterval(() => {
-          setCountdown(prev => (prev !== null ? prev - 1 : null));
-        }, 1000);
-      }
-    }
-    return () => {
-      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    };
-  }, [countdown, changeEpisode]);
-
+    localStorage.setItem('video_server', server);
+  }, [server]);
 
   const extractNumericId = (id: string) => {
       if (!id) return '';
@@ -120,50 +75,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allow="autoplay; fullscreen"
           title="Anime Stream"
         ></iframe>
-         <AnimatePresence>
-          {countdown !== null && nextEp && (
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute bottom-4 right-4 z-20 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-4 w-72 text-white shadow-2xl"
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 flex-shrink-0 bg-dark-800 rounded-sm flex items-center justify-center border border-dark-600">
-                    <ChevronRight className="w-6 h-6 text-brand-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Up Next</span>
-                  <p className="font-bold text-sm truncate" title={nextEp.title || `Episode ${nextEp.number}`}>
-                    {nextEp.title || `Episode ${nextEp.number}`}
-                  </p>
-                  <p className="text-brand-400 font-mono text-lg font-black mt-1">
-                    Playing in {countdown}...
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    cancelAutoplay();
-                    changeEpisode('next');
-                  }}
-                  className="h-8 flex-1 bg-brand-400 hover:bg-white text-black font-bold text-xs uppercase tracking-widest rounded-sm transition-colors"
-                >
-                  Play Now
-                </button>
-                <button
-                  onClick={cancelAutoplay}
-                  className="h-8 w-8 flex-shrink-0 bg-dark-800 hover:bg-dark-700 text-zinc-300 rounded-sm transition-colors flex items-center justify-center"
-                  title="Cancel Autoplay"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       <div className={`bg-dark-900 border-x border-b border-dark-700 p-3 md:p-6 flex flex-col gap-4 md:gap-6 shadow-lg relative overflow-hidden ${isWebFullscreen ? 'flex-shrink-0 z-50' : ''}`}>
@@ -187,13 +98,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     ))}
                  </div>
              </div>
-             <div className="flex flex-col gap-1.5 flex-1 md:flex-none min-w-[100px]">
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Play className="w-3 h-3" /> Autoplay</span>
-                <div className="flex bg-dark-950 p-1 rounded-sm border border-dark-700">
-                    <button onClick={() => setIsAutoplayEnabled(true)} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${isAutoplayEnabled ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}>On</button>
-                    <button onClick={() => setIsAutoplayEnabled(false)} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${!isAutoplayEnabled ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>Off</button>
-                </div>
-            </div>
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-2 border-t border-dark-700 pt-3 md:border-0 md:pt-0">
