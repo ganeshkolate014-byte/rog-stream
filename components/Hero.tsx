@@ -13,7 +13,6 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayItems, setDisplayItems] = useState<Anime[]>([]);
   const currentIndexRef = useRef(currentIndex);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const transitionTriggeredRef = useRef(false);
 
   useEffect(() => {
@@ -108,37 +107,26 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
     setCurrentIndex((prev) => (prev + 1) % displayItems.length);
   }, [displayItems.length]);
 
-  // Slide Timer and Early Video Transition Logic
+  // Combined effect for image slide intervals and resetting the video trigger ref.
   useEffect(() => {
+    // Reset trigger on every slide change
+    transitionTriggeredRef.current = false;
+
     if (displayItems.length <= 1) return;
-    
+
     const currentItem = displayItems[currentIndex];
     const isVideo = currentItem?.posterType === 'video';
-    
-    transitionTriggeredRef.current = false; // Reset trigger on every slide change
 
+    // If it's a video, the timer is handled by onTimeUpdate prop.
+    // This effect only needs to handle the interval for images.
     if (isVideo) {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const onTimeUpdate = () => {
-            if (video.duration && !transitionTriggeredRef.current && video.duration - video.currentTime <= 5) {
-                transitionTriggeredRef.current = true;
-                handleNext();
-            }
-        };
-
-        video.addEventListener('timeupdate', onTimeUpdate);
-        return () => video.removeEventListener('timeupdate', onTimeUpdate);
-
-    } else {
-        // Fallback to interval for images
-        const interval = setInterval(() => {
-            handleNext();
-        }, config.interval);
-
-        return () => clearInterval(interval);
+      return;
     }
+
+    // Fallback to interval for images
+    const interval = setInterval(handleNext, config.interval);
+
+    return () => clearInterval(interval);
   }, [displayItems, currentIndex, config.interval, handleNext]);
 
 
@@ -185,14 +173,20 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
            <div className="absolute inset-0">
                 {isVideo ? (
                     <video
-                        ref={videoRef}
                         key={heroImage} // Key helps React re-mount the video element
                         src={heroImage}
                         autoPlay
                         muted
                         playsInline
-                        onEnded={handleNext} 
                         className="w-full h-full object-cover object-center"
+                        onTimeUpdate={(e) => {
+                            const video = e.currentTarget;
+                            // Check for duration to avoid NaN issues on load
+                            if (!isNaN(video.duration) && !transitionTriggeredRef.current && (video.duration - video.currentTime) <= 2) {
+                                transitionTriggeredRef.current = true;
+                                handleNext();
+                            }
+                        }}
                     />
                 ) : (
                     <img
@@ -202,18 +196,12 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                     />
                 )}
                 
-                 {/* Vignette / Gradients - OPTIMIZED FOR PERFECT FADE */}
+                 {/* Vignette / Gradients */}
                  
-                 {/* 1. Left Gradient (Main Text Backdrop) - Reduced intensity */}
-                 <div className="absolute inset-y-0 left-0 w-full md:w-[45%] bg-gradient-to-r from-[#050505]/95 via-[#050505]/70 to-transparent" />
+                 {/* 1. Left Gradient (Main Text Backdrop) */}
+                 <div className="absolute inset-y-0 left-0 w-full md:w-[60%] bg-gradient-to-r from-[#050505]/95 via-[#050505]/70 to-transparent" />
                  
-                 {/* 2. Bottom Gradient (Seamless Blend) - Further reduced for subtlety */}
-                 {/* <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-t from-[#050505] via-[#050505]/30 to-transparent" /> */}
-                 
-                 {/* 3. Base Gradient to ensure footer connection (very subtle) */}
-                 {/* <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#050505]/90 to-transparent" /> */}
-
-                 {/* 4. Top Gradient (Navbar Visibility) */}
+                 {/* 2. Top Gradient (Navbar Visibility) */}
                  <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#050505]/80 to-transparent" />
            </div>
 
