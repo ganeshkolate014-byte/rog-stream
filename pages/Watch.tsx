@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
@@ -170,6 +171,7 @@ export const Watch: React.FC = () => {
                         changeEpisode={handleNavigate}
                         hasPrevEp={!!prevEp}
                         hasNextEp={!!nextEp}
+                        nextEp={nextEp}
                     />
                 </div>
 
