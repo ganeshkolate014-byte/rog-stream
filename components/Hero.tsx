@@ -211,7 +211,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                  {/* <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-t from-[#050505] via-[#050505]/30 to-transparent" /> */}
                  
                  {/* 3. Base Gradient to ensure footer connection (very subtle) */}
-                 {*/ <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#050505]/90 to-transparent" /> */}
+                 {/* <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#050505]/90 to-transparent" /> */}
 
                  {/* 4. Top Gradient (Navbar Visibility) */}
                  <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#050505]/80 to-transparent" />
