@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Server, Languages, Info, AlertTriangle, Maximize, Minimize, Captions, Cast } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Server, Languages, Info, AlertTriangle } from 'lucide-react';
 import { Episode } from '../types';
 
 interface VideoPlayerProps {
@@ -25,8 +25,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (localStorage.getItem('video_server') as 'vidWish' | 'megaPlay') || 'megaPlay';
   });
   
-  const [isWebFullscreen, setIsWebFullscreen] = useState(false);
-  
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('video_category', category);
@@ -49,17 +47,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const domain = server === "vidWish" ? "vidwish.live" : "megaplay.buzz";
   const src = `https://${domain}/stream/s-2/${hianimeEpId}/${category}?autoplay=1`;
 
-  const toggleWebFullscreen = () => {
-    setIsWebFullscreen(!isWebFullscreen);
-  };
-
-  const containerClass = isWebFullscreen 
-    ? "fixed inset-0 z-50 bg-black flex flex-col" 
-    : "flex flex-col gap-0 w-full relative group";
-
-  const playerClass = isWebFullscreen
-    ? "flex-1 w-full bg-black relative"
-    : "relative w-full aspect-video bg-black border border-dark-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden z-10";
+  // Default layout classes
+  const containerClass = "flex flex-col gap-0 w-full relative group";
+  const playerClass = "relative w-full aspect-video bg-black border border-dark-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden z-10";
 
   return (
     <div className={containerClass}>
@@ -76,7 +66,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         ></iframe>
       </div>
 
-      <div className={`bg-dark-900 border-x border-b border-dark-700 p-3 md:p-6 flex flex-col gap-4 md:gap-6 shadow-lg relative overflow-hidden ${isWebFullscreen ? 'flex-shrink-0 z-50' : ''}`}>
+      <div className="bg-dark-900 border-x border-b border-dark-700 p-3 md:p-6 flex flex-col gap-4 md:gap-6 shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImgridIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjQ2LDE5NSw2NywwLjAzKSIiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIgLz48L3N2Zz4=')] opacity-50 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -102,11 +92,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="flex items-center justify-between md:justify-end gap-2 border-t border-dark-700 pt-3 md:border-0 md:pt-0">
              <span className="md:hidden text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Navigation</span>
              <div className="flex gap-2">
-                <button className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title="Cast to Device (Mock)"><Cast className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
-                <button className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title="Captions Settings"><Captions className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
-                <div className="w-px h-6 bg-dark-700 mx-1"></div>
                 <button onClick={() => changeEpisode("prev")} disabled={!hasPrevEp} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all -skew-x-12" title="Previous Episode"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
-                <button onClick={toggleWebFullscreen} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title={isWebFullscreen ? "Exit Fullscreen" : "Web Fullscreen"}>{isWebFullscreen ? <Minimize className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /> : <Maximize className="w-4 h-4 md:w-5 md:h-5 skew-x-12" />}</button>
                 <button onClick={() => changeEpisode("next")} disabled={!hasNextEp} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all -skew-x-12" title="Next Episode"><ChevronRight className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
              </div>
           </div>
