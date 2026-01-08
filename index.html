@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
     
     <!-- PWA Setup -->
     <link rel="manifest" href="/manifest.json" />
@@ -57,13 +58,17 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700;800&family=Teko:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      html, body {
-        background-color: #000000; /* Force pure black for system UI blending */
+      html {
+        background-color: #000000;
+        color-scheme: dark;
+      }
+      body {
+        background-color: #000000;
         color: #e4e4e7;
         font-family: 'Rajdhani', sans-serif;
         overflow-x: hidden;
         min-height: 100vh;
-        overscroll-behavior-y: none; /* Prevent bounce effect showing white background */
+        overscroll-behavior-y: none;
       }
       
       /* Clean Scrollbar */

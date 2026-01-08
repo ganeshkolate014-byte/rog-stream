@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate, useNavigationType } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { AnimeDetail } from './pages/AnimeDetail';
@@ -8,7 +8,7 @@ import { Watch } from './pages/Watch';
 import { Schedule } from './pages/Schedule';
 import { Search } from './pages/Search';
 import { Category } from './pages/Category';
-import { Genres } from './pages/Genres'; // Import Genres
+import { Genres } from './pages/Genres';
 import { Admin } from './pages/Admin';
 import { Login } from './pages/Login';
 import { Benefits } from './pages/Benefits';
@@ -38,22 +38,24 @@ const ScrollToTop = () => {
 const AppRoutes = () => {
     const location = useLocation();
     return (
-        <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/benefits" element={<Benefits />} />
-            <Route path="/documentation" element={<Documentation />} />
-            <Route path="/api-docs" element={<ApiDocs />} />
-            <Route path="/anime/:id" element={<AnimeDetail />} />
-            <Route path="/watch/:episodeId" element={<Watch />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/genres" element={<Genres />} /> {/* New Route */}
-            <Route path="/animes/:category" element={<Category />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/benefits" element={<Benefits />} />
+                <Route path="/documentation" element={<Documentation />} />
+                <Route path="/api-docs" element={<ApiDocs />} />
+                <Route path="/anime/:id" element={<AnimeDetail />} />
+                <Route path="/watch/:episodeId" element={<Watch />} />
+                <Route path="/schedule" element={<Schedule />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/genres" element={<Genres />} />
+                <Route path="/animes/:category" element={<Category />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </AnimatePresence>
     );
 };
 
@@ -64,8 +66,8 @@ const App: React.FC = () => {
         <ScrollToTop />
         <Trackpad />
         
-        {/* Main Layout Container with Simple Fade In */}
-        <div className="min-h-screen text-zinc-100 font-sans selection:bg-brand-500 selection:text-white flex flex-col overflow-x-hidden animate-in fade-in duration-700">
+        {/* Main Layout Container */}
+        <div className="min-h-[100dvh] bg-dark-950 text-zinc-100 font-sans selection:bg-brand-500 selection:text-white flex flex-col overflow-x-hidden animate-in fade-in duration-700">
             
             <Navbar />
             
@@ -75,7 +77,7 @@ const App: React.FC = () => {
             
             <AiChatbot />
 
-            <footer className="bg-dark-900 border-t border-brand-400/20 py-12 mt-auto block relative overflow-hidden">
+            <footer className="bg-dark-900 border-t border-brand-400/20 py-12 mt-auto block relative overflow-hidden pb-[env(safe-area-inset-bottom)]">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-50"></div>
                 <div className="max-w-7xl mx-auto px-4 text-center">
                 <h2 className="text-3xl font-black text-white mb-4 font-display italic tracking-tighter">
