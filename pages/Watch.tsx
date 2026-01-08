@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail, Episode, HistoryItem } from '../types';
-import { Loader2, AlertCircle, ChevronLeft, Play, X, Grid, List, Search, LayoutGrid } from 'lucide-react';
+import { LoaderCircle, AlertTriangle, ChevronLeft, Play, X, Grid2X2, List, Search, LayoutTemplate } from 'lucide-react';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
@@ -69,7 +68,7 @@ export const Watch: React.FC = () => {
   if (isLoading) {
     return (
         <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center text-brand-400 gap-4">
-            <Loader2 className="w-16 h-16 animate-spin" />
+            <LoaderCircle className="w-16 h-16 animate-spin" />
             <span className="font-bold text-sm tracking-widest uppercase">Loading Stream...</span>
         </div>
     );
@@ -78,7 +77,7 @@ export const Watch: React.FC = () => {
   if (error || !animeData || !animeData.episodes) {
       return (
         <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center gap-6">
-            <AlertCircle className="w-20 h-20 text-red-500 opacity-50" />
+            <AlertTriangle className="w-20 h-20 text-red-500 opacity-50" />
             <div className="text-center">
                 <h1 className="text-2xl font-bold text-white uppercase tracking-widest mb-2">Error</h1>
                 <p className="text-zinc-500 text-sm">Episode data not found.</p>
@@ -199,7 +198,7 @@ export const Watch: React.FC = () => {
                                             className={`p-1 rounded-sm transition-colors ${viewMode === 'grid' ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}
                                             title="Grid View"
                                         >
-                                            <LayoutGrid className="w-3.5 h-3.5" />
+                                            <Grid2X2 className="w-3.5 h-3.5" />
                                         </button>
                                      </div>
                                      <span className="text-[10px] font-mono text-zinc-500 bg-black/50 px-2 py-1 rounded border border-white/5">
@@ -285,7 +284,7 @@ export const Watch: React.FC = () => {
                                 )
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full text-zinc-500 p-8 text-center">
-                                    <AlertCircle className="w-8 h-8 mb-2 opacity-50" />
+                                    <AlertTriangle className="w-8 h-8 mb-2 opacity-50" />
                                     <p className="text-xs uppercase font-bold">No episodes found</p>
                                 </div>
                             )}

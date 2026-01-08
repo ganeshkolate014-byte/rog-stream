@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, Send, CornerDownLeft, Loader2 } from 'lucide-react';
+import { BotMessageSquare, X, SendHorizontal, CornerDownLeft, LoaderCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { generateAiChatResponse } from '../services/gemini';
 import { ChatMessage } from '../types';
@@ -70,7 +70,7 @@ export const AiChatbot: React.FC = () => {
                     className="fixed bottom-6 right-6 z-[8000] w-16 h-16 bg-brand-400 text-black rounded-full flex items-center justify-center shadow-2xl shadow-brand-400/20 hover:bg-white transition-colors"
                     aria-label="Open AI Assistant"
                 >
-                    <Bot className="w-8 h-8" />
+                    <BotMessageSquare className="w-8 h-8" />
                 </motion.button>
             )}
             </AnimatePresence>
@@ -88,7 +88,7 @@ export const AiChatbot: React.FC = () => {
                         {/* Header */}
                         <div className="flex-shrink-0 p-4 bg-dark-800 border-b border-dark-700 flex justify-between items-center">
                             <h3 className="text-lg font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                <Bot className="w-5 h-5 text-brand-400"/> AI Assistant
+                                <BotMessageSquare className="w-5 h-5 text-brand-400"/> AI Assistant
                             </h3>
                             <button onClick={() => setIsOpen(false)} className="p-2 text-zinc-500 hover:text-white">
                                 <X className="w-5 h-5" />
@@ -101,7 +101,7 @@ export const AiChatbot: React.FC = () => {
                                 <div key={index} className={`flex gap-3 items-end ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     {msg.role === 'model' && (
                                         <div className="w-8 h-8 rounded-full bg-brand-400/20 flex items-center justify-center flex-shrink-0 border border-brand-400/30">
-                                            <Bot className="w-5 h-5 text-brand-400"/>
+                                            <BotMessageSquare className="w-5 h-5 text-brand-400"/>
                                         </div>
                                     )}
                                     <div className={`max-w-[80%] p-3 rounded-lg text-sm leading-relaxed ${
@@ -117,7 +117,7 @@ export const AiChatbot: React.FC = () => {
                              {isLoading && (
                                 <div className="flex gap-3 items-end justify-start">
                                     <div className="w-8 h-8 rounded-full bg-brand-400/20 flex items-center justify-center flex-shrink-0 border border-brand-400/30">
-                                        <Bot className="w-5 h-5 text-brand-400"/>
+                                        <BotMessageSquare className="w-5 h-5 text-brand-400"/>
                                     </div>
                                     <div className="p-3 bg-dark-800 rounded-lg flex items-center gap-1.5">
                                         <span className="w-2 h-2 bg-zinc-500 rounded-full animate-pulse delay-0"></span>
@@ -146,7 +146,7 @@ export const AiChatbot: React.FC = () => {
                                     disabled={isLoading || !inputValue.trim()}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-brand-400 text-black rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
                                 >
-                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : <CornerDownLeft className="w-5 h-5" />}
+                                    {isLoading ? <LoaderCircle className="w-5 h-5 animate-spin"/> : <SendHorizontal className="w-5 h-5" />}
                                 </button>
                             </form>
                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, User, Bell, Compass, Calendar, Flame, Settings, LogIn, Home, LogOut, ChevronLeft, Crown, Info, Code } from 'lucide-react';
+import { Search, AlignRight, X, CircleUser, BellRing, Compass, CalendarDays, TrendingUp, Settings2, LogIn, Home, LogOut, ChevronLeft, Crown, Info, FileCode2, Clapperboard, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,6 +38,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Trending', path: '/animes/trending' },
+    { name: 'Genres', path: '/genres' }, // Added Genres
     { name: 'Schedule', path: '/schedule' },
     { name: 'Movies', path: '/animes/movie' },
   ];
@@ -71,7 +72,7 @@ export const Navbar: React.FC = () => {
               
               {/* Logo */}
               <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200 block">
-                <Home className="w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                <Home className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
               </Link>
 
               {/* Desktop Navigation */}
@@ -92,7 +93,7 @@ export const Navbar: React.FC = () => {
 
             {/* Center: Search - Stretched on Mobile */}
             <div className="flex flex-1 items-center justify-start md:justify-end max-w-4xl mx-auto">
-              <form onSubmit={handleSearch} className="w-full relative group mt-0 md:-mt-1">
+              <form onSubmit={handleSearch} className="w-full relative group mt-0 md:mt-3">
                 <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
                   <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
@@ -123,12 +124,12 @@ export const Navbar: React.FC = () => {
                 )}
 
                 <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group">
-                    <Bell className="w-5 h-5 group-hover:animate-ping absolute opacity-30" />
-                    <Bell className="w-5 h-5 relative z-10" />
+                    <BellRing className="w-5 h-5 group-hover:animate-ping absolute opacity-30" />
+                    <BellRing className="w-5 h-5 relative z-10" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-400 rounded-none rotate-45 shadow-[0_0_5px_#ff0033]" />
                 </button>
                 <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors">
-                   <Settings className="w-5 h-5 hover:rotate-180 transition-transform duration-700" />
+                   <Settings2 className="w-5 h-5 hover:rotate-180 transition-transform duration-700" />
                 </Link>
                 
                 {user ? (
@@ -148,7 +149,7 @@ export const Navbar: React.FC = () => {
                 ) : (
                   <Link to="/login" className="flex items-center gap-2 bg-brand-400 hover:bg-white text-black px-6 py-2 text-xs font-black uppercase tracking-widest transition-all skew-x-[-12deg] clip-path-polygon hover:scale-105 shadow-[0_0_15px_rgba(255,0,51,0.4)]">
                       <span className="skew-x-[12deg] flex items-center gap-2">
-                          <User className="w-4 h-4" /> Login
+                          <CircleUser className="w-4 h-4" /> Login
                       </span>
                   </Link>
                 )}
@@ -159,7 +160,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMobileOpen(true)}
                 className="lg:hidden text-white p-1.5 md:p-2 hover:text-brand-400 transition-colors border border-white/10 bg-white/5 skew-x-[-10deg]"
               >
-                <Menu className="w-5 h-5 md:w-6 md:h-6 skew-x-[10deg]" />
+                <AlignRight className="w-5 h-5 md:w-6 md:h-6 skew-x-[10deg]" />
               </button>
             </div>
           </div>
@@ -209,13 +210,21 @@ export const Navbar: React.FC = () => {
                         <Compass className="w-5 h-5 group-hover:rotate-45 transition-transform" />
                         <span className="font-bold uppercase tracking-wider">Home Base</span>
                     </Link>
+                    <Link to="/genres" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-brand-400 transition-all border-l-2 border-transparent hover:border-brand-400 group">
+                        <LayoutGrid className="w-5 h-5" />
+                        <span className="font-bold uppercase tracking-wider">Browse Genres</span>
+                    </Link>
                     <Link to="/animes/trending" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-brand-400 transition-all border-l-2 border-transparent hover:border-brand-400 group">
-                        <Flame className="w-5 h-5 group-hover:text-orange-500 transition-colors" />
+                        <TrendingUp className="w-5 h-5 group-hover:text-orange-500 transition-colors" />
                         <span className="font-bold uppercase tracking-wider">Trending</span>
                     </Link>
                     <Link to="/schedule" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-brand-400 transition-all border-l-2 border-transparent hover:border-brand-400">
-                        <Calendar className="w-5 h-5" />
+                        <CalendarDays className="w-5 h-5" />
                         <span className="font-bold uppercase tracking-wider">Schedule</span>
+                    </Link>
+                    <Link to="/animes/movie" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-brand-400 transition-all border-l-2 border-transparent hover:border-brand-400">
+                        <Clapperboard className="w-5 h-5" />
+                        <span className="font-bold uppercase tracking-wider">Movies</span>
                     </Link>
                 </div>
 
@@ -227,11 +236,11 @@ export const Navbar: React.FC = () => {
                         <span className="font-bold uppercase tracking-wider">How It Works</span>
                     </Link>
                     <Link to="/api-docs" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
-                        <Code className="w-5 h-5" />
+                        <FileCode2 className="w-5 h-5" />
                         <span className="font-bold uppercase tracking-wider">API Docs</span>
                     </Link>
                     <Link to="/admin" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
-                        <Settings className="w-5 h-5" />
+                        <Settings2 className="w-5 h-5" />
                         <span className="font-bold uppercase tracking-wider">Config</span>
                     </Link>
                     
@@ -245,7 +254,7 @@ export const Navbar: React.FC = () => {
                     {user ? (
                         <>
                             <Link to="/profile" className="flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all border-l-2 border-transparent hover:border-white">
-                                <User className="w-5 h-5" />
+                                <CircleUser className="w-5 h-5" />
                                 <span className="font-bold uppercase tracking-wider">Profile</span>
                             </Link>
                             <button onClick={logout} className="w-full flex items-center gap-4 p-4 hover:bg-brand-400/10 text-zinc-300 hover:text-white transition-all text-left border-l-2 border-transparent hover:border-white">

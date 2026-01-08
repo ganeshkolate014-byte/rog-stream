@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress } from '../services/firebase';
 import { ProfileAnimeCard } from '../components/ProfileAnimeCard'; // New Component
-import { User, LogOut, Loader2, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, LogOut, LoaderCircle, History, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -38,7 +38,7 @@ export const Profile: React.FC = () => {
   if (authLoading || loading) {
     return (
         <div className="min-h-screen bg-dark-950 flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-brand-400 animate-spin" />
+            <LoaderCircle className="w-10 h-10 text-brand-400 animate-spin" />
         </div>
     );
   }
@@ -84,7 +84,7 @@ export const Profile: React.FC = () => {
         {/* Error Display */}
         {error && (
             <div className="bg-red-900/20 border border-red-500/30 p-6 text-center my-8 rounded-md">
-                <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3"/>
+                <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3"/>
                 <h3 className="text-red-400 font-bold uppercase tracking-wider">Failed to load your data</h3>
                 <p className="text-zinc-400 text-sm mt-2 font-mono">{error}</p>
                 <p className="text-zinc-500 text-xs mt-4">
@@ -105,7 +105,7 @@ export const Profile: React.FC = () => {
                     onClick={() => setActiveTab('watching')}
                     className={`pb-4 text-xs md:text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'watching' ? 'text-white border-b-2 border-brand-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                    <Clock className="w-3 h-3 md:w-4 md:h-4" /> Continue ({watchingList.length})
+                    <History className="w-3 h-3 md:w-4 md:h-4" /> Continue ({watchingList.length})
                 </button>
                 <button 
                     onClick={() => setActiveTab('completed')}

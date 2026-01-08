@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
@@ -7,7 +6,7 @@ import { Hero } from '../components/Hero';
 import { AnimeCard } from '../components/AnimeCard';
 import { ContinueWatchingCard } from '../components/ContinueWatchingCard'; // New Component
 import { HomeSkeleton, ContinueWatchingCardSkeleton } from '../components/Skeletons';
-import { ChevronRight, AlertCircle, LayoutGrid } from 'lucide-react';
+import { ChevronRight, AlertTriangle, LayoutTemplate } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress } from '../services/firebase';
 import { motion } from 'framer-motion';
@@ -108,7 +107,7 @@ const ContinueWatchingSection: React.FC = () => {
                 <div className="max-w-[1600px] mx-auto px-4 md:px-6">
                      <div className="bg-red-900/20 border border-red-500/30 p-4 text-center rounded-md flex flex-col items-center gap-2">
                         <div className="flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-red-400" />
+                            <AlertTriangle className="w-4 h-4 text-red-400" />
                             <h3 className="text-red-400 font-bold uppercase text-sm">Continue Watching Offline</h3>
                         </div>
                         <p className="text-zinc-400 text-xs font-mono">{error}</p>
@@ -161,55 +160,111 @@ export const Home: React.FC = () => {
     const loadCustomSlides = async () => {
       const storedUrls = localStorage.getItem('custom_hero_urls');
       
-      // Default URL if not set
-      const defaultUrl = 'https://res.cloudinary.com/dj5hhott5/raw/upload/v1767375104/heroslides_data.json';
-      const urls: string[] = storedUrls ? JSON.parse(storedUrls) : [defaultUrl];
+      // Default URL config
+      const defaultUrlConfig = { 
+          url: 'https://res.cloudinary.com/dj5hhott5/raw/upload/v1767375104/heroslides_data.json',
+          audioEnabled: true 
+      };
 
-      if (!urls || urls.length === 0) {
-          setCustomSlides([]);
-          return;
+      let configList: { url: string, audioEnabled: boolean }[] = [defaultUrlConfig];
+
+      if (storedUrls) {
+          try {
+              const parsed = JSON.parse(storedUrls);
+              // Handle legacy string array support
+              if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+                  configList = parsed.map((url: string) => ({ url, audioEnabled: false }));
+              } else if (Array.isArray(parsed)) {
+                  configList = parsed;
+              }
+          } catch(e) {
+              console.error("Failed to parse stored URLs, using default");
+          }
       }
 
-      const promises = urls.map(async (url: string) => {
+      // Helper to attempt finding the array of animes in various JSON structures
+      const findAnimeArray = (obj: any): any[] => {
+          if (!obj) return [];
+          if (Array.isArray(obj)) return obj;
+
+          // Check for single object that looks like an anime (Must have ID and Title/Name)
+          if (obj && (obj.id || obj.animeId) && (obj.title || obj.name)) {
+              return [obj];
+          }
+
+          // Common API structures
+          if (obj.data) {
+             if (Array.isArray(obj.data)) return obj.data;
+             // Check deep nested spotlight
+             if (obj.data.spotlight && Array.isArray(obj.data.spotlight)) return obj.data.spotlight;
+             // Check if data itself is a single anime
+             if ((obj.data.id || obj.data.animeId) && (obj.data.title || obj.data.name)) return [obj.data];
+          }
+          
+          if (Array.isArray(obj.spotlight)) return obj.spotlight;
+          if (Array.isArray(obj.results)) return obj.results;
+          if (Array.isArray(obj.animes)) return obj.animes;
+          
+          // Fallback: search object values for first valid array
+          if (typeof obj === 'object') {
+              for (const key in obj) {
+                  const val = obj[key];
+                  if (Array.isArray(val) && val.length > 0) return val;
+                  
+                  // Check if value is a single anime object
+                  if (val && typeof val === 'object' && (val.id || val.animeId) && (val.title || val.name)) {
+                      return [val];
+                  }
+              }
+          }
+          return [];
+      };
+
+      const promises = configList.map(async (cfg) => {
+          if (!cfg.url) return [];
           try {
-              const res = await fetch(url);
-              if (!res.ok) return []; // Return empty array on network failure
-              
-              const responseData = await res.json();
-              
-              // Handle new JSON structure with a 'data' and 'spotlight' key
-              if (!responseData.success || !Array.isArray(responseData.data?.spotlight)) {
-                  console.warn("Custom slide data structure is invalid for URL:", url);
+              const res = await fetch(cfg.url);
+              if (!res.ok) {
+                  console.warn(`Failed to fetch custom slide: ${cfg.url} (${res.status})`);
                   return [];
               }
               
-              // Map over the spotlight array inside the response
-              return responseData.data.spotlight.map((data: any) => ({
-                  id: data.id,
-                  title: data.title,
-                  poster: data.poster,
-                  image: data.poster,
-                  banner: data.poster,
-                  description: data.synopsis,
-                  rank: data.rank,
-                  type: data.type,
-                  year: data.aired,
+              const responseData = await res.json();
+              const rawSlides = findAnimeArray(responseData);
+
+              if (rawSlides.length === 0) {
+                  console.warn("No valid anime data found in custom slide JSON:", cfg.url);
+                  return [];
+              }
+              
+              // Robust mapping
+              return rawSlides.map((data: any) => ({
+                  id: data.id || data.animeId || `custom-${Math.random().toString(36).substr(2, 9)}`,
+                  title: data.title || data.name || 'Untitled',
+                  poster: data.poster || data.image || data.banner || '',
+                  image: data.image || data.poster || '',
+                  banner: data.banner || data.poster || '',
+                  description: data.description || data.synopsis || '',
+                  rank: data.rank || 0,
+                  type: data.type || 'TV',
+                  year: data.year || data.aired || '',
                   episodes: {
-                      sub: data.episodes?.sub,
-                      dub: data.episodes?.dub,
-                      eps: data.episodes?.eps
+                      sub: data.episodes?.sub || 0,
+                      dub: data.episodes?.dub || 0,
+                      eps: data.episodes?.eps || 0
                   },
-                  posterType: data.posterType || 'image'
+                  posterType: data.posterType || 'image',
+                  allowAudio: cfg.audioEnabled // Pass user preference
               } as Anime));
 
           } catch (e) {
-              console.error("Failed to load or parse custom slide", url, e);
-              return []; // Return empty array on error
+              console.error("Error loading custom slide:", cfg.url, e);
+              return []; 
           }
       });
       
       const results = await Promise.all(promises);
-      const validSlides = results.flat(); // Flatten the array of arrays (e.g., [[anime1], [anime2, anime3]] -> [anime1, anime2, anime3])
+      const validSlides = results.flat().filter(slide => slide.poster); // Filter out items without images
       setCustomSlides(validSlides);
     };
 
@@ -219,7 +274,7 @@ export const Home: React.FC = () => {
   if (isLoading) return <HomeSkeleton />;
   if (isError) return (
       <div className="h-screen flex flex-col items-center justify-center bg-dark-950 text-center px-4">
-        <AlertCircle className="w-16 h-16 text-brand-400 mb-4 opacity-50" />
+        <AlertTriangle className="w-16 h-16 text-brand-400 mb-4 opacity-50" />
         <h1 className="text-2xl font-bold text-white mb-2 uppercase tracking-widest">System Error</h1>
         <p className="text-zinc-500 font-mono text-sm">{error?.message || "Failed to load content"}</p>
       </div>
@@ -233,9 +288,6 @@ export const Home: React.FC = () => {
   const topUpcoming = data?.topUpcoming || data?.topUpcomingAnimes || [];
   const latestEpisode = data?.latestEpisode || data?.latestEpisodeAnimes || [];
   const top10 = data?.top10?.week || data?.top10Animes?.week || [];
-
-  const defaultGenres = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mecha", "Music", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller", "Mystery", "Psychological"];
-  const displayGenres = genresData && genresData.length > 0 ? genresData : defaultGenres;
 
   return (
     <motion.div 
@@ -292,44 +344,7 @@ export const Home: React.FC = () => {
             link="/animes/top-upcoming"
         />
         
-        {/* Kickstart Your Journey (Discovery) - Dynamic Genres - CLEAN GRID LAYOUT */}
-        <div className="py-8 md:py-16 bg-gradient-to-b from-dark-900 to-dark-950 border-t border-white/5 mt-12">
-            <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-                <div className="flex items-center justify-between mb-8">
-                     <div className="flex items-center gap-3">
-                        <LayoutGrid className="w-6 h-6 text-brand-400" />
-                        <div>
-                            <h2 className="text-xl md:text-3xl font-black text-white uppercase tracking-wide font-display italic">
-                                Explore <span className="text-brand-400">Genres</span>
-                            </h2>
-                            <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mt-1">Categorized Database</p>
-                        </div>
-                     </div>
-                </div>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                    {displayGenres.map((genre) => (
-                    <Link 
-                        key={genre} 
-                        to={`/animes/${genre.toLowerCase().replace(/ /g, '-')}`}
-                        className="group relative overflow-hidden bg-dark-800 border border-white/5 hover:border-brand-400/50 rounded-sm p-4 flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(255,0,51,0.1)]"
-                    >
-                        {/* Hover Gradient Background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-400/0 via-brand-400/0 to-brand-400/5 group-hover:to-brand-400/10 transition-all duration-500" />
-                        
-                        {/* Text */}
-                        <span className="relative z-10 text-xs md:text-sm font-bold text-zinc-400 group-hover:text-white uppercase tracking-widest transition-colors">
-                            {genre}
-                        </span>
-                        
-                        {/* Decorative Corner */}
-                        <div className="absolute top-0 right-0 w-0 h-0 border-t-[6px] border-r-[6px] border-t-transparent border-r-white/5 group-hover:border-r-brand-400 transition-colors duration-300" />
-                        <div className="absolute bottom-0 left-0 w-0 h-0 border-b-[6px] border-l-[6px] border-b-transparent border-l-white/5 group-hover:border-l-brand-400 transition-colors duration-300" />
-                    </Link>
-                    ))}
-                </div>
-            </div>
-        </div>
+        {/* Genre Grid Removed - Now on separate page /genres */}
 
       </div>
     </motion.div>

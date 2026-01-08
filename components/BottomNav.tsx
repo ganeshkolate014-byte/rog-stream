@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Search, Flame, Calendar } from 'lucide-react';
+import { Home, Search, TrendingUp, CalendarDays } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
-    { icon: Flame, label: 'Hot', path: '/animes/trending' },
-    { icon: Calendar, label: 'Plan', path: '/schedule' },
+    { icon: TrendingUp, label: 'Hot', path: '/animes/trending' },
+    { icon: CalendarDays, label: 'Plan', path: '/schedule' },
   ];
 
   return (

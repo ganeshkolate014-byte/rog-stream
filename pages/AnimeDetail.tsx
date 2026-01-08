@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
-import { Play, Layers, AlertCircle, ChevronDown, ChevronUp, Monitor, Globe } from 'lucide-react';
+import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
@@ -71,7 +71,7 @@ export const AnimeDetail: React.FC = () => {
   if (isError || !anime) {
      return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-dark-900 text-white gap-4">
-           <AlertCircle className="w-16 h-16 text-brand-400" />
+           <AlertTriangle className="w-16 h-16 text-brand-400" />
            <p className="text-zinc-500 font-mono">DATA NOT FOUND</p>
            <Link to="/" className="text-sm font-bold text-brand-400 hover:underline uppercase tracking-wider">Return to Base</Link>
         </div>
@@ -132,9 +132,19 @@ export const AnimeDetail: React.FC = () => {
                 )}
                 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-zinc-300 mt-2 md:mt-4 border-t border-white/10 pt-2 md:pt-4">
-                    {anime.type && <div className="flex items-center gap-1.5"><Monitor className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.type}</span></div>}
+                    {anime.type && <div className="flex items-center gap-1.5"><Tv className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.type}</span></div>}
                     {anime.totalEpisodes && <div className="flex items-center gap-1.5"><Layers className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.totalEpisodes} EPS</span></div>}
                     <div className="flex items-center gap-1.5"><Globe className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.hasSub && 'SUB'}{anime.hasSub && anime.hasDub && ' | '}{anime.hasDub && 'DUB'}</span></div>
+                    
+                    {/* Add buttons */}
+                    <div className="flex items-center gap-3 ml-auto">
+                        <button className="p-2 bg-dark-800 hover:bg-white hover:text-black text-zinc-400 rounded-full transition-colors" title="Share">
+                            <Share2 className="w-4 h-4" />
+                        </button>
+                         <button className="p-2 bg-dark-800 hover:bg-brand-400 hover:text-black text-zinc-400 rounded-full transition-colors" title="Add to List">
+                            <BookmarkPlus className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

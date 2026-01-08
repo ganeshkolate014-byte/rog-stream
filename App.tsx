@@ -8,6 +8,7 @@ import { Watch } from './pages/Watch';
 import { Schedule } from './pages/Schedule';
 import { Search } from './pages/Search';
 import { Category } from './pages/Category';
+import { Genres } from './pages/Genres'; // Import Genres
 import { Admin } from './pages/Admin';
 import { Login } from './pages/Login';
 import { Benefits } from './pages/Benefits';
@@ -48,6 +49,7 @@ const AppRoutes = () => {
             <Route path="/watch/:episodeId" element={<Watch />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/genres" element={<Genres />} /> {/* New Route */}
             <Route path="/animes/:category" element={<Category />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<Navigate to="/" replace />} />

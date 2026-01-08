@@ -2,7 +2,7 @@ import React from 'react';
 import { useApi, constructUrl } from '../services/api';
 import { ScheduleResponse, ScheduleItem } from '../types';
 import { motion } from 'framer-motion';
-import { Calendar, ChevronRight, AlertCircle, PlayCircle, Hash } from 'lucide-react';
+import { CalendarDays, ChevronRight, AlertTriangle, PlayCircle, Hash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ScheduleSkeleton } from '../components/Skeletons';
 
@@ -87,7 +87,7 @@ export const Schedule: React.FC = () => {
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="mb-12">
             <h1 className="text-4xl md:text-6xl font-black text-white italic font-display uppercase tracking-tighter flex items-center gap-3 mb-2">
-                <Calendar className="w-8 h-8 md:w-12 md:h-12 text-brand-400" />
+                <CalendarDays className="w-8 h-8 md:w-12 md:h-12 text-brand-400" />
                 <span>On <span className="text-brand-400">Air</span></span>
             </h1>
             <p className="text-zinc-400 font-sans text-sm md:text-base max-w-lg border-l-2 border-brand-400 pl-4 ml-2">
@@ -99,7 +99,7 @@ export const Schedule: React.FC = () => {
             <ScheduleSkeleton />
         ) : error ? (
             <div className="flex flex-col items-center text-center py-20 bg-red-900/10 border border-red-500/20 rounded-lg">
-                <AlertCircle className="w-10 h-10 text-red-500 mb-4" />
+                <AlertTriangle className="w-10 h-10 text-red-500 mb-4" />
                 <h2 className="text-xl font-bold text-white uppercase">Failed to Load Schedule</h2>
                 <p className="text-zinc-400 mt-2 font-mono text-sm">{error.message}</p>
             </div>

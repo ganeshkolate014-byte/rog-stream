@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Bookmark, Volume2 } from 'lucide-react';
+import { Play, Plus, AudioWaveform } from 'lucide-react';
 import { Anime } from '../types';
 
 interface HeroProps {
@@ -237,7 +236,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                     className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6 text-[9px] md:text-xs font-bold text-zinc-300 uppercase tracking-widest drop-shadow-md"
                 >
                   <span className="text-brand-400 flex items-center gap-1">
-                     <Volume2 className="w-3 h-3" />
+                     <AudioWaveform className="w-3 h-3" />
                      {current.type || 'Series'}
                   </span>
                   <span className="w-1 h-1 bg-zinc-600 rounded-full" />
@@ -267,7 +266,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                   </Link>
                   
                   <button className="h-9 md:h-12 w-10 md:w-14 flex items-center justify-center border-2 border-brand-400/50 bg-black text-brand-400 hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg] group/bm">
-                     <Bookmark className="w-3.5 h-3.5 md:w-5 md:h-5 skew-x-[12deg] group-hover/bm:fill-current" />
+                     <Plus className="w-4 h-4 md:w-6 md:h-6 skew-x-[12deg] group-hover/bm:scale-110 transition-transform" />
                   </button>
                 </motion.div>
 

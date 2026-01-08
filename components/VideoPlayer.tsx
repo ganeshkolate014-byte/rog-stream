@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Monitor, Globe, Info, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Server, Languages, Info, AlertTriangle, Maximize, Minimize, Captions, Cast } from 'lucide-react';
 import { Episode } from '../types';
 
 interface VideoPlayerProps {
@@ -84,14 +83,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
              <div className="flex flex-col gap-1.5 flex-1 md:flex-none min-w-[140px]">
-                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Monitor className="w-3 h-3" /> Server</span>
+                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Server className="w-3 h-3" /> Server</span>
                  <div className="flex bg-dark-950 p-1 rounded-sm border border-dark-700">
                     <button onClick={() => setServer("megaPlay")} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${server === "megaPlay" ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}>Mega</button>
                     <button onClick={() => setServer("vidWish")} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${server === "vidWish" ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}>VidWish</button>
                  </div>
              </div>
              <div className="flex flex-col gap-1.5 flex-1 md:flex-none">
-                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Globe className="w-3 h-3" /> Audio</span>
+                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Languages className="w-3 h-3" /> Audio</span>
                  <div className="flex bg-dark-950 p-1 rounded-sm border border-dark-700">
                     {["sub", "dub"].map((type) => (
                         <button key={type} onClick={() => setCategory(type as 'sub' | 'dub')} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${category === type ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>{type}</button>
@@ -103,8 +102,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="flex items-center justify-between md:justify-end gap-2 border-t border-dark-700 pt-3 md:border-0 md:pt-0">
              <span className="md:hidden text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Navigation</span>
              <div className="flex gap-2">
+                <button className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title="Cast to Device (Mock)"><Cast className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
+                <button className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title="Captions Settings"><Captions className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
+                <div className="w-px h-6 bg-dark-700 mx-1"></div>
                 <button onClick={() => changeEpisode("prev")} disabled={!hasPrevEp} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all -skew-x-12" title="Previous Episode"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
-                <button onClick={toggleWebFullscreen} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title={isWebFullscreen ? "Exit Fullscreen" : "Web Fullscreen"}>{isWebFullscreen ? <Minimize2 className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /> : <Maximize2 className="w-4 h-4 md:w-5 md:h-5 skew-x-12" />}</button>
+                <button onClick={toggleWebFullscreen} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 transition-all -skew-x-12" title={isWebFullscreen ? "Exit Fullscreen" : "Web Fullscreen"}>{isWebFullscreen ? <Minimize className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /> : <Maximize className="w-4 h-4 md:w-5 md:h-5 skew-x-12" />}</button>
                 <button onClick={() => changeEpisode("next")} disabled={!hasNextEp} className="group px-3 py-2 bg-dark-800 border border-dark-600 text-zinc-400 hover:text-white hover:border-brand-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all -skew-x-12" title="Next Episode"><ChevronRight className="w-4 h-4 md:w-5 md:h-5 skew-x-12" /></button>
              </div>
           </div>
