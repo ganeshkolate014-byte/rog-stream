@@ -1,20 +1,22 @@
 {
-  "name": "Anime Streaming",
-  "short_name": "Anime",
-  "start_url": "/",
+  "name": "Rog Stream Anime",
+  "short_name": "RogAnime",
+  "id": "/",
+  "start_url": "/#/?pwa=true",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
-  "scope": "/",
+  "lang": "hi-IN",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/7709/7709903.png",
+      "src": "https://res.cloudinary.com/dj5hhott5/image/upload/v1767901324/qhz63r6numvtg9816crn.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/7709/7709903.png",
+      "src": "https://res.cloudinary.com/dj5hhott5/image/upload/v1767901324/qhz63r6numvtg9816crn.png",
       "sizes": "512x512",
       "type": "image/png"
     }
