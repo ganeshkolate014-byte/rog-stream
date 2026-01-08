@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Anime Streaming",
   "short_name": "Anime",
   "start_url": "/",
@@ -7,6 +8,7 @@
   "theme_color": "#000000",
   "orientation": "portrait",
   "scope": "/",
+  "categories": ["entertainment", "video"],
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/7709/7709903.png",
