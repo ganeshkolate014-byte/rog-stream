@@ -4,7 +4,7 @@
   "id": "/",
   "start_url": "/#/?pwa=true",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
