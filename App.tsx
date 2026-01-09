@@ -17,7 +17,6 @@ import { Documentation } from './pages/Documentation';
 import { ApiDocs } from './pages/ApiDocs'; 
 import { Trackpad } from './components/Trackpad';
 import { AuthProvider } from './context/AuthContext';
-import { AiChatbot } from './components/AiChatbot';
 
 // ScrollToTop Component
 const ScrollToTop = () => {
@@ -75,8 +74,6 @@ const App: React.FC = () => {
                 <AppRoutes />
             </div>
             
-            <AiChatbot />
-
             <footer className="bg-dark-900 border-t border-brand-400/20 py-12 mt-auto block relative overflow-hidden pb-[env(safe-area-inset-bottom)]">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-50"></div>
                 <div className="max-w-7xl mx-auto px-4 text-center">

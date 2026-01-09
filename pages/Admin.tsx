@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move, Mouse, Sliders, Key, Bot, ImagePlus, Trash2, Plus } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, Database, Play, Code, RotateCcw, Monitor, Type, Layout, MousePointer2, Smartphone, Move, Mouse, Sliders, Key, ImagePlus, Trash2, Plus } from 'lucide-react';
 import { DEFAULT_CONFIG, getConfig } from '../services/api';
 import axios from 'axios';
 
@@ -355,23 +354,6 @@ export const Admin: React.FC = () => {
                                     Generate
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Gemini API Key */}
-                        <div>
-                            <label className="text-xs font-bold text-zinc-400 uppercase mb-1 flex items-center gap-2">
-                                <Bot className="w-3 h-3 text-brand-400" /> Gemini AI Key
-                            </label>
-                            <input 
-                                type="password" 
-                                value={config.geminiApiKey || ''}
-                                onChange={(e) => setConfig({...config, geminiApiKey: e.target.value})}
-                                className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600 font-mono"
-                                placeholder="Paste your Google Gemini API Key here"
-                            />
-                            <p className="text-[10px] text-zinc-500 mt-2">
-                                Required for AI Chatbot. Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-brand-400 hover:underline">aistudio.google.com</a>.
-                            </p>
                         </div>
                     </div>
                 </div>
