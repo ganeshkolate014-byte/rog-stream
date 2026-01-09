@@ -1,23 +1,28 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
 import { HistoryItem, AnimeDetail, Episode } from "../types";
 
-// NOTE: If you are seeing "Network request failed", ensure these keys are valid for your project.
-// If you don't have a project, use the "Demo Login" feature in the app.
+// Updated Configuration for 'roganime-13469'
 const firebaseConfig = {
-  apiKey: "AIzaSyAlLxzjm8hP4xBlmUj1Cbl66-JTSigLyy8",
-  authDomain: "vvvv-89f82.firebaseapp.com",
-  projectId: "vvvv-89f82",
-  storageBucket: "vvvv-89f82.firebasestorage.app",
-  messagingSenderId: "212566230567",
-  appId: "1:212566230567:web:559be7fa0f4b0ed5273002",
-  measurementId: "G-5FRQQRQQZ2"
+  apiKey: "AIzaSyDMJqlOCQJ2-n24DiDcBHn8CoES4aY4NTg",
+  authDomain: "roganime-13469.firebaseapp.com",
+  projectId: "roganime-13469",
+  storageBucket: "roganime-13469.firebasestorage.app",
+  messagingSenderId: "88007201894",
+  appId: "1:88007201894:web:8ebb35ee96412faa13c9a7",
+  measurementId: "G-RPCFNSMFFF"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app); // Export storage for profile uploads
 export const googleProvider = new GoogleAuthProvider();
 
 export const DEMO_USER_ID = 'demo-otaku-id';
@@ -138,6 +143,35 @@ export const removeUserHistoryItem = async (userId: string, animeId: string) => 
   }
 };
 
+// NEW: Remove item from progress list (Watching/Saved/Completed)
+export const removeUserProgress = async (userId: string, animeId: string) => {
+  // Demo Fallback
+  if (isMock(userId)) {
+      const currentProgress = getMockData<Record<string, UserProgress>>('progress', {});
+      if (currentProgress[animeId]) {
+          delete currentProgress[animeId];
+          setMockData('progress', currentProgress);
+      }
+      return;
+  }
+
+  try {
+    const docRef = doc(db, "users", userId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const existingProgress = docSnap.data().progress || {};
+      if (existingProgress[animeId]) {
+          delete existingProgress[animeId];
+          await updateDoc(docRef, { progress: existingProgress });
+      }
+    }
+  } catch (error) {
+    console.error("Error removing progress:", error);
+    throw new Error("Could not remove anime from list.");
+  }
+};
+
 export interface UserProgress {
   animeId: string;
   title: string;
@@ -148,6 +182,50 @@ export interface UserProgress {
   lastUpdated: number;
   nextEpisodeId?: string;
 }
+
+export const addToWatchlist = async (userId: string, animeData: AnimeDetail) => {
+  const progressData: UserProgress = {
+      animeId: animeData.id,
+      title: animeData.title,
+      poster: animeData.poster || animeData.image,
+      currentEpisode: 0,
+      totalEpisodes: animeData.totalEpisodes || animeData.episodes?.length || 0,
+      status: 'On Hold', // Default status for "Add to List"
+      lastUpdated: Date.now(),
+      nextEpisodeId: animeData.episodes?.[0]?.id
+  };
+
+  // Demo Fallback
+  if (isMock(userId)) {
+      const currentProgress = getMockData<Record<string, UserProgress>>('progress', {});
+      if (!currentProgress[animeData.id]) {
+          currentProgress[animeData.id] = progressData;
+          setMockData('progress', currentProgress);
+      }
+      return;
+  }
+
+  try {
+    const docRef = doc(db, "users", userId);
+    const docSnap = await getDoc(docRef);
+    const existingProgress = docSnap.exists() ? docSnap.data().progress || {} : {};
+    
+    // Don't overwrite if progress exists
+    if (existingProgress[animeData.id]) {
+        return; 
+    }
+
+    const updatedProgress = {
+        ...existingProgress,
+        [animeData.id]: progressData
+    };
+
+    await setDoc(docRef, { progress: updatedProgress }, { merge: true });
+  } catch (error) {
+    console.error("Error adding to watchlist:", error);
+    throw new Error("Could not save to watchlist.");
+  }
+};
 
 export const saveAnimeProgress = async (
   userId: string, 
@@ -182,9 +260,6 @@ export const saveAnimeProgress = async (
 
   try {
     const docRef = doc(db, "users", userId);
-    // FIX: Read existing progress, update it in memory, and save it back.
-    // This prevents the incorrect field name issue ("progress.anime-id") and ensures
-    // the data is stored as a proper map field named "progress".
     const docSnap = await getDoc(docRef);
     const existingProgress = docSnap.exists() ? docSnap.data().progress || {} : {};
     

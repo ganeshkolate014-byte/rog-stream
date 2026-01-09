@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, DEMO_USER_ID } from '../services/firebase';
 
 interface AuthContextType {
@@ -7,6 +7,8 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   loginDemo: () => void;
+  loginWithEmail: (email: string, pass: string) => Promise<void>;
+  registerWithEmail: (email: string, pass: string, name: string, file: File | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -14,6 +16,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   logout: async () => {},
   loginDemo: () => {},
+  loginWithEmail: async () => {},
+  registerWithEmail: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -74,6 +78,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.reload(); 
   };
 
+  const loginWithEmail = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
+  };
+
+  const registerWithEmail = async (email: string, pass: string, name: string, file: File | null) => {
+      // 1. Create User
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const newUser = userCredential.user;
+
+      let photoURL = null;
+
+      // 2. Upload Photo to Cloudinary if exists
+      if (file) {
+          try {
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('upload_preset', 'My smallest server'); // Unsigned preset
+              formData.append('cloud_name', 'dj5hhott5');
+              
+              const res = await fetch('https://api.cloudinary.com/v1_1/dj5hhott5/image/upload', {
+                  method: 'POST',
+                  body: formData
+              });
+              
+              if (res.ok) {
+                  const data = await res.json();
+                  photoURL = data.secure_url;
+              } else {
+                  console.error("Cloudinary upload failed", await res.text());
+              }
+          } catch (e) {
+              console.error("Profile photo upload error", e);
+          }
+      }
+
+      // 3. Update Profile with Display Name and Photo URL
+      await updateProfile(newUser, {
+          displayName: name,
+          photoURL: photoURL
+      });
+      
+      // Force reload to get updated profile in auth state
+      await newUser.reload();
+      setUser(auth.currentUser);
+  };
+
   const logout = async () => {
     if (isDemo) {
         localStorage.removeItem('is_demo_session');
@@ -86,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, loginDemo }}>
+    <AuthContext.Provider value={{ user, loading, logout, loginDemo, loginWithEmail, registerWithEmail }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
-import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus } from 'lucide-react';
+import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
-import { getUserProgress, UserProgress } from '../services/firebase';
+import { getUserProgress, UserProgress, addToWatchlist } from '../services/firebase';
 import { motion } from 'framer-motion';
 
 // Helper component for Section Headers to match the design
@@ -34,6 +34,10 @@ export const AnimeDetail: React.FC = () => {
   const [showFullDesc, setShowFullDesc] = useState(false);
   const { user } = useAuth();
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  
+  // Interaction states
+  const [copied, setCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: anime, isLoading, isError } = useApi<AnimeDetailType>(
       constructUrl('details', { id })
@@ -64,7 +68,46 @@ export const AnimeDetail: React.FC = () => {
   useEffect(() => {
     // Removed window.scrollTo(0,0) here to let App.tsx handle it
     setShowFullDesc(false);
+    setCopied(false);
+    setIsSaving(false);
   }, [id]);
+  
+  const handleShare = async () => {
+    try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+        console.error("Copy failed", e);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+        alert("Please login to save to watchlist");
+        return;
+    }
+    if (userProgress || !anime) return; // Already saved
+
+    setIsSaving(true);
+    try {
+        await addToWatchlist(user.uid, anime);
+        // Optimistically update local state
+        setUserProgress({
+             animeId: anime.id,
+             title: anime.title,
+             poster: anime.poster || anime.image,
+             currentEpisode: 0,
+             totalEpisodes: anime.totalEpisodes || anime.episodes?.length || 0,
+             status: 'On Hold',
+             lastUpdated: Date.now()
+        });
+    } catch (e) {
+        console.error("Failed to add to watchlist", e);
+    } finally {
+        setIsSaving(false);
+    }
+  };
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -136,13 +179,32 @@ export const AnimeDetail: React.FC = () => {
                     {anime.totalEpisodes && <div className="flex items-center gap-1.5"><Layers className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.totalEpisodes} EPS</span></div>}
                     <div className="flex items-center gap-1.5"><Globe className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.hasSub && 'SUB'}{anime.hasSub && anime.hasDub && ' | '}{anime.hasDub && 'DUB'}</span></div>
                     
-                    {/* Add buttons */}
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-3 ml-auto">
-                        <button className="p-2 bg-dark-800 hover:bg-white hover:text-black text-zinc-400 rounded-full transition-colors" title="Share">
-                            <Share2 className="w-4 h-4" />
+                        <button 
+                            onClick={handleShare}
+                            className="p-2 bg-dark-800 hover:bg-white hover:text-black text-zinc-400 rounded-full transition-colors relative border border-white/5" 
+                            title="Share"
+                        >
+                            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
                         </button>
-                         <button className="p-2 bg-dark-800 hover:bg-brand-400 hover:text-black text-zinc-400 rounded-full transition-colors" title="Add to List">
-                            <BookmarkPlus className="w-4 h-4" />
+                         <button 
+                            onClick={handleSave}
+                            disabled={!!userProgress || isSaving}
+                            className={`p-2 rounded-full transition-all border border-white/5 ${
+                                userProgress 
+                                    ? 'bg-brand-400 text-black border-brand-400 cursor-default shadow-[0_0_10px_rgba(255,0,51,0.5)]' 
+                                    : 'bg-dark-800 hover:bg-brand-400 hover:text-black text-zinc-400'
+                            }`} 
+                            title={userProgress ? "Saved to Library" : "Add to Library"}
+                        >
+                            {isSaving ? (
+                                <LoaderCircle className="w-4 h-4 animate-spin" />
+                            ) : userProgress ? (
+                                <CheckCircle className="w-4 h-4" />
+                            ) : (
+                                <BookmarkPlus className="w-4 h-4" />
+                            )}
                         </button>
                     </div>
                 </div>
