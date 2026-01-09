@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, DEMO_USER_ID } from '../services/firebase';
+import { User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signInWithPopup } from 'firebase/auth';
+import { auth, DEMO_USER_ID, googleProvider } from '../services/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +9,7 @@ interface AuthContextType {
   loginDemo: () => void;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string, file: File | null) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   loginDemo: () => {},
   loginWithEmail: async () => {},
   registerWithEmail: async () => {},
+  loginWithGoogle: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -82,6 +84,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
+  const loginWithGoogle = async () => {
+    await signInWithPopup(auth, googleProvider);
+  };
+
   const registerWithEmail = async (email: string, pass: string, name: string, file: File | null) => {
       // 1. Create User
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -136,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, loginDemo, loginWithEmail, registerWithEmail }}>
+    <AuthContext.Provider value={{ user, loading, logout, loginDemo, loginWithEmail, registerWithEmail, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
