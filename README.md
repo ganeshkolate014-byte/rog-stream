@@ -110,6 +110,6 @@ Contributions are welcome! If you have suggestions or bug reports, please open a
   
   Created with ❤️ by the **RogStream Team**
   
-  [Report Bug](https://github.com/your-username/rogstream/issues) • [Request Feature](https://github.com/your-username/rogstream/issues)
+  [Report Bug](https://github.com/ganeshkolate014-byte/rogstream/issues) • [Request Feature](https://github.com/ganeshkolate014-byte/rogstream/issues)
 
 </div>
