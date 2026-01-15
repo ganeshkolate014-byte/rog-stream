@@ -297,13 +297,13 @@ export const Home: React.FC = () => {
       className="min-h-screen pb-20 bg-dark-950"
     >
       
-      {/* Hero Section - Hidden on mobile */}
-      <div className="hidden md:block">
+      {/* Hero Section - Visible on mobile for premium feel */}
+      <div className="block">
         {spotlight.length > 0 && <Hero items={spotlight} />}
       </div>
 
       {/* Content pulled up slightly to overlap hero fade with z-index correction - Adjusted for less overlap */}
-      <div className={`relative z-40 space-y-4 ${spotlight.length > 0 ? 'md:-mt-16 -mt-0 pt-20 md:pt-0' : 'pt-24'}`}>
+      <div className={`relative z-40 space-y-4 ${spotlight.length > 0 ? 'md:-mt-16 -mt-12 pt-0' : 'pt-24'}`}>
         
         {/* Real Continue Watching Section */}
         <ContinueWatchingSection />

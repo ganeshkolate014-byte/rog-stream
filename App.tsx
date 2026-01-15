@@ -17,19 +17,25 @@ import { Documentation } from './pages/Documentation';
 import { ApiDocs } from './pages/ApiDocs'; 
 import { Trackpad } from './components/Trackpad';
 import { AuthProvider } from './context/AuthContext';
+import { useScroll } from './context/ScrollContext';
 
 // ScrollToTop Component
 const ScrollToTop = () => {
     const location = useLocation();
     const navType = useNavigationType();
+    const { lenis } = useScroll();
   
     useEffect(() => {
       // Only scroll to top if PUSHing to a new route. 
       // On POP (Back button), let the browser restore scroll position.
       if (navType !== 'POP') {
-        window.scrollTo(0, 0);
+        if (lenis) {
+            lenis.scrollTo(0, { immediate: true });
+        } else {
+            window.scrollTo(0, 0);
+        }
       }
-    }, [location.pathname, navType]);
+    }, [location.pathname, navType, lenis]);
   
     return null;
 };

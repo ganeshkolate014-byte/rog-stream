@@ -132,21 +132,21 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   // Helper to get Tailwind classes based on size setting (Updated for mobile density)
   const getTitleSizeClasses = (size: string) => {
       switch(size) {
-          case 'small': return 'text-xl md:text-3xl lg:text-4xl';
-          case 'normal': return 'text-2xl md:text-4xl lg:text-5xl';
-          case 'large': return 'text-2xl md:text-5xl lg:text-6xl'; // Smaller on mobile
-          case 'massive': return 'text-3xl md:text-7xl lg:text-8xl'; // Smaller on mobile
-          default: return 'text-2xl md:text-5xl lg:text-6xl';
+          case 'small': return 'text-2xl md:text-3xl lg:text-4xl';
+          case 'normal': return 'text-3xl md:text-4xl lg:text-5xl';
+          case 'large': return 'text-4xl md:text-5xl lg:text-6xl'; // Larger on mobile for impact
+          case 'massive': return 'text-5xl md:text-7xl lg:text-8xl'; // Premium large text
+          default: return 'text-4xl md:text-5xl lg:text-6xl';
       }
   };
 
   // Helper for Aspect Ratio
   const getAspectRatioClass = () => {
     switch(config.aspectRatio) {
-        case '16:9': return 'aspect-video';
-        case 'cinematic': return 'h-[50vh] md:h-[80vh]';
+        case '16:9': return 'aspect-[3/4] md:aspect-video'; // Vertical poster feel on mobile
+        case 'cinematic': return 'h-[70vh] md:h-[80vh]';
         case 'fullscreen': return 'h-screen';
-        default: return 'aspect-video';
+        default: return 'aspect-[3/4] md:aspect-video';
     }
   };
 
@@ -259,14 +259,14 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                 >
                   <Link
                     to={`/watch/${encodeURIComponent(current.id)}`}
-                    className="flex-1 md:flex-none h-9 md:h-12 px-4 md:px-8 bg-brand-400 hover:bg-white hover:text-black text-black font-black uppercase tracking-widest transition-all skew-x-[-12deg] flex items-center justify-center gap-2 group/btn shadow-[0_0_20px_rgba(255,0,51,0.2)]"
+                    className="flex-1 md:flex-none h-12 md:h-14 px-6 md:px-10 bg-brand-400 hover:bg-white hover:text-black text-black font-black uppercase tracking-widest transition-all skew-x-[-12deg] flex items-center justify-center gap-2 group/btn shadow-[0_0_20px_rgba(255,0,51,0.2)]"
                   >
-                    <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-black skew-x-[12deg] group-hover/btn:scale-110 transition-transform" />
-                    <span className="text-[10px] md:text-sm skew-x-[12deg] whitespace-nowrap pt-0.5">Start Watching</span>
+                    <Play className="w-5 h-5 md:w-6 md:h-6 fill-black skew-x-[12deg] group-hover/btn:scale-110 transition-transform" />
+                    <span className="text-xs md:text-base skew-x-[12deg] whitespace-nowrap pt-0.5">Start Watching</span>
                   </Link>
                   
-                  <button className="h-9 md:h-12 w-10 md:w-14 flex items-center justify-center border-2 border-brand-400/50 bg-black text-brand-400 hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg] group/bm">
-                     <Plus className="w-4 h-4 md:w-6 md:h-6 skew-x-[12deg] group-hover/bm:scale-110 transition-transform" />
+                  <button className="h-12 md:h-14 w-12 md:w-16 flex items-center justify-center border-2 border-brand-400/50 bg-black text-brand-400 hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg] group/bm">
+                     <Plus className="w-5 h-5 md:w-6 md:h-6 skew-x-[12deg] group-hover/bm:scale-110 transition-transform" />
                   </button>
                 </motion.div>
 

@@ -186,7 +186,7 @@ export const Navbar: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-black border-l-2 border-brand-400 z-50 lg:hidden shadow-[0_0_50px_rgba(255,0,51,0.3)] overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-black/90 backdrop-blur-xl border-l-2 border-brand-400 z-50 lg:hidden shadow-[0_0_50px_rgba(255,0,51,0.3)] overflow-y-auto"
             >
               <div className="p-6 relative">
                 {/* Decorative Elements */}
