@@ -17,6 +17,7 @@ import { Documentation } from './pages/Documentation';
 import { ApiDocs } from './pages/ApiDocs'; 
 import { Trackpad } from './components/Trackpad';
 import { AuthProvider } from './context/AuthContext';
+import { SmoothScroll } from './components/SmoothScroll';
 
 // ScrollToTop Component
 const ScrollToTop = () => {
@@ -61,11 +62,12 @@ const AppRoutes = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <Trackpad />
-        
-        {/* Main Layout Container */}
+      <SmoothScroll>
+        <Router>
+          <ScrollToTop />
+          <Trackpad />
+
+          {/* Main Layout Container */}
         <div className="min-h-[100dvh] bg-dark-950 text-zinc-100 font-sans selection:bg-brand-500 selection:text-white flex flex-col overflow-x-hidden animate-in fade-in duration-700">
             
             <Navbar />
@@ -95,7 +97,8 @@ const App: React.FC = () => {
                 </div>
             </footer>
         </div>
-      </Router>
+        </Router>
+      </SmoothScroll>
     </AuthProvider>
   );
 };

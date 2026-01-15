@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, AlignRight, X, CircleUser, BellRing, Compass, CalendarDays, TrendingUp, Settings2, LogIn, Home, LogOut, ChevronLeft, Crown, Info, FileCode2, Clapperboard, LayoutGrid } from 'lucide-react';
+import { Search, AlignRight, X, CircleUser, BellRing, Compass, CalendarDays, TrendingUp, Settings2, LogIn, Zap, LogOut, ChevronLeft, Crown, Info, FileCode2, Clapperboard, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
@@ -72,7 +72,7 @@ export const Navbar: React.FC = () => {
               
               {/* Logo */}
               <Link to="/" className="text-white hover:text-brand-400 transition-colors transform hover:scale-110 duration-200 block">
-                <Home className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
+                <Zap className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2.5} />
               </Link>
 
               {/* Desktop Navigation */}
