@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Play, Plus, AudioWaveform } from 'lucide-react';
 import { Anime } from '../types';
 
@@ -13,6 +13,18 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   const [displayItems, setDisplayItems] = useState<Anime[]>([]);
   const currentIndexRef = useRef(currentIndex);
   const transitionTriggeredRef = useRef(false);
+
+  // Parallax Setup
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+      target: containerRef,
+      offset: ["start start", "end start"]
+  });
+
+  // Background moves slower
+  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  // Content moves faster (or different direction) to create depth
+  const yContent = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
 
   useEffect(() => {
     currentIndexRef.current = currentIndex;
@@ -158,7 +170,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   const isVideo = current.posterType === 'video';
 
   return (
-    <div className={`relative w-full ${getAspectRatioClass()} overflow-hidden bg-[#050505] group font-sans transition-all duration-500`}>
+    <div ref={containerRef} className={`relative w-full ${getAspectRatioClass()} overflow-hidden bg-[#050505] group font-sans transition-all duration-500`}>
       <AnimatePresence mode="wait">
         <motion.div
           key={current.id}
@@ -169,7 +181,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           className="absolute inset-0"
         >
            {/* Layer 1: Background Image or Video */}
-           <div className="absolute inset-0">
+           <motion.div style={{ y: yBg }} className="absolute inset-0">
                 {isVideo ? (
                     <video
                         key={heroImage} // Key helps React re-mount the video element
@@ -177,7 +189,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                         autoPlay
                         muted
                         playsInline
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center scale-110" // Added scale to prevent gaps during parallax
                         onTimeUpdate={(e) => {
                             const video = e.currentTarget;
                             // Check for duration to avoid NaN issues on load
@@ -191,11 +203,32 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                     <img
                         src={heroImage}
                         alt={current.title}
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center scale-110" // Added scale to prevent gaps during parallax
                     />
                 )}
-                
-                 {/* Vignette / Gradients */}
+           </motion.div>
+
+           {/* Vignette / Gradients - Kept absolute and separate to stay fixed or move with parent?
+               Usually gradients should stay with the image if they are part of the image composition,
+               but here they provide text contrast. Let's keep them fixed to the container or move them?
+               If I wrap them in motion.div style={{ y }}, they move with image.
+               Let's keep them fixed (not wrapped in y) to ensure text remains readable as image moves.
+               Actually, Layer 1 was the parent of gradients in previous code.
+               Wait, in previous code:
+               <div className="absolute inset-0">
+                  <video/img ... />
+                  <div gradients ... />
+               </div>
+
+               If I split them, I need to restructure.
+               If I wrap the whole Layer 1 div with motion.div, the gradients will move too.
+               That is probably desired so the vignette stays with the image edges?
+               But "w-full h-full object-cover" fills the container.
+               If I move it down 50%, the top will show empty space if I don't scale it.
+               I added scale-110.
+           */}
+           <div className="absolute inset-0 pointer-events-none">
+                 {/* 1. Left Gradient (Main Text Backdrop) */}
                  
                  {/* 1. Left Gradient (Main Text Backdrop) */}
                  <div className="absolute inset-y-0 left-0 w-full md:w-[60%] bg-gradient-to-r from-[#050505]/95 via-[#050505]/70 to-transparent" />
@@ -208,7 +241,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           <div className="absolute inset-0 flex items-end justify-start z-30 pointer-events-none">
             {/* Added bottom padding to lift content off the edge */}
             <div className="max-w-[1600px] mx-auto px-4 md:px-12 w-full pb-8 md:pb-24 pointer-events-auto">
-              <div className="max-w-2xl flex flex-col items-start text-left relative z-40">
+              <motion.div style={{ y: yContent }} className="max-w-2xl flex flex-col items-start text-left relative z-40">
                 
                 {/* Brand/Logo Area (Title) */}
                 {config.showTitle && (
@@ -235,7 +268,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                     transition={{ delay: 0.3 }}
                     className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6 text-[9px] md:text-xs font-bold text-zinc-300 uppercase tracking-widest drop-shadow-md"
                 >
-                  <span className="text-brand-400 flex items-center gap-1">
+                  <span className="text-white flex items-center gap-1">
                      <AudioWaveform className="w-3 h-3" />
                      {current.type || 'Series'}
                   </span>
@@ -259,18 +292,18 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                 >
                   <Link
                     to={`/watch/${encodeURIComponent(current.id)}`}
-                    className="flex-1 md:flex-none h-9 md:h-12 px-4 md:px-8 bg-brand-400 hover:bg-white hover:text-black text-black font-black uppercase tracking-widest transition-all skew-x-[-12deg] flex items-center justify-center gap-2 group/btn shadow-[0_0_20px_rgba(255,0,51,0.2)]"
+                    className="flex-1 md:flex-none h-9 md:h-12 px-4 md:px-8 bg-white hover:bg-zinc-200 text-black font-black uppercase tracking-widest transition-all skew-x-[-12deg] flex items-center justify-center gap-2 group/btn shadow-lg"
                   >
                     <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-black skew-x-[12deg] group-hover/btn:scale-110 transition-transform" />
                     <span className="text-[10px] md:text-sm skew-x-[12deg] whitespace-nowrap pt-0.5">Start Watching</span>
                   </Link>
                   
-                  <button className="h-9 md:h-12 w-10 md:w-14 flex items-center justify-center border-2 border-brand-400/50 bg-black text-brand-400 hover:bg-brand-400 hover:text-black hover:border-brand-400 transition-all skew-x-[-12deg] group/bm">
+                  <button className="h-9 md:h-12 w-10 md:w-14 flex items-center justify-center border-2 border-white/50 bg-black text-white hover:bg-white hover:text-black hover:border-white transition-all skew-x-[-12deg] group/bm">
                      <Plus className="w-4 h-4 md:w-6 md:h-6 skew-x-[12deg] group-hover/bm:scale-110 transition-transform" />
                   </button>
                 </motion.div>
 
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>
@@ -282,7 +315,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
               <button 
                   key={`${item.id}-${idx}`}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`w-1 md:w-1.5 h-1 md:h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-brand-400 h-4 md:h-6' : 'bg-white/30 hover:bg-white'}`}
+                  className={`w-1 md:w-1.5 h-1 md:h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-white h-4 md:h-6' : 'bg-zinc-600 hover:bg-zinc-400'}`}
               />
           ))}
       </div>
