@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Server, Languages, Info, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Server, Languages, Info, AlertTriangle, MonitorPlay } from 'lucide-react';
 import { Episode } from '../types';
+import { CustomPlayer } from './CustomPlayer';
+import { SegmentedControl } from './SegmentedControl';
 
 interface VideoPlayerProps {
   episodeId: string;
@@ -24,7 +26,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [server, setServer] = useState<'vidWish' | 'megaPlay'>(() => {
     return (localStorage.getItem('video_server') as 'vidWish' | 'megaPlay') || 'megaPlay';
   });
-  
+  const [useCustomPlayer, setUseCustomPlayer] = useState(() => {
+    return localStorage.getItem('use_custom_player') === 'true';
+  });
+
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('video_category', category);
@@ -33,6 +38,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     localStorage.setItem('video_server', server);
   }, [server]);
+
+  useEffect(() => {
+    localStorage.setItem('use_custom_player', String(useCustomPlayer));
+  }, [useCustomPlayer]);
 
   const extractNumericId = (id: string) => {
       if (!id) return '';
@@ -47,6 +56,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const domain = server === "vidWish" ? "vidwish.live" : "megaplay.buzz";
   const src = `https://${domain}/stream/s-2/${hianimeEpId}/${category}?autoplay=1`;
 
+  // Test Stream for Custom Player (Big Buck Bunny)
+  // Note: The /anime/episode-srcs API endpoint is currently returning 404/Provider Not Found.
+  // This test stream allows verifying the CustomPlayer UI and HLS functionality.
+  const testStreamUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
+
   // Default layout classes
   const containerClass = "flex flex-col gap-0 w-full relative group";
   const playerClass = "relative w-full aspect-video bg-black border border-dark-700 shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden z-10";
@@ -54,16 +68,28 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div className={containerClass}>
       <div className={playerClass}>
-        <iframe
-          key={`${server}-${category}-${episodeId}`}
-          src={src}
-          className="w-full h-full"
-          allowFullScreen
-          scrolling="no"
-          frameBorder="0"
-          allow="autoplay; fullscreen"
-          title="Anime Stream"
-        ></iframe>
+        {useCustomPlayer ? (
+            <CustomPlayer
+                key={episodeId}
+                src={testStreamUrl}
+                autoPlay
+                onNext={() => changeEpisode("next")}
+                onPrev={() => changeEpisode("prev")}
+                hasNext={hasNextEp}
+                hasPrev={hasPrevEp}
+            />
+        ) : (
+            <iframe
+            key={`${server}-${category}-${episodeId}`}
+            src={src}
+            className="w-full h-full"
+            allowFullScreen
+            scrolling="no"
+            frameBorder="0"
+            allow="autoplay; fullscreen"
+            title="Anime Stream"
+            ></iframe>
+        )}
       </div>
 
       <div className="bg-dark-900 border-x border-b border-dark-700 p-3 md:p-6 flex flex-col gap-4 md:gap-6 shadow-lg relative overflow-hidden">
@@ -74,20 +100,49 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
              <div className="flex flex-col gap-1.5 flex-1 md:flex-none min-w-[140px]">
                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Server className="w-3 h-3" /> Server</span>
-                 <div className="flex bg-dark-950 p-1 rounded-sm border border-dark-700">
-                    <button onClick={() => setServer("megaPlay")} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${server === "megaPlay" ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}>Mega</button>
-                    <button onClick={() => setServer("vidWish")} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${server === "vidWish" ? 'bg-brand-400 text-black' : 'text-zinc-500 hover:text-white'}`}>VidWish</button>
-                 </div>
+                 <SegmentedControl
+                    name="server"
+                    options={[
+                        { label: 'Mega', value: 'megaPlay' },
+                        { label: 'VidWish', value: 'vidWish' }
+                    ]}
+                    value={server}
+                    onChange={(val) => setServer(val as 'megaPlay' | 'vidWish')}
+                 />
              </div>
              <div className="flex flex-col gap-1.5 flex-1 md:flex-none">
                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><Languages className="w-3 h-3" /> Audio</span>
-                 <div className="flex bg-dark-950 p-1 rounded-sm border border-dark-700">
-                    {["sub", "dub"].map((type) => (
-                        <button key={type} onClick={() => setCategory(type as 'sub' | 'dub')} className={`flex-1 px-3 py-1.5 text-[10px] md:text-xs font-bold uppercase transition-all rounded-sm ${category === type ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}>{type}</button>
-                    ))}
-                 </div>
+                 <SegmentedControl
+                    name="audio"
+                    options={[
+                        { label: 'Sub', value: 'sub' },
+                        { label: 'Dub', value: 'dub' }
+                    ]}
+                    value={category}
+                    onChange={(val) => setCategory(val as 'sub' | 'dub')}
+                 />
+             </div>
+
+             {/* Custom Player Toggle */}
+             <div className="flex flex-col gap-1.5 flex-1 md:flex-none">
+                 <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1"><MonitorPlay className="w-3 h-3" /> Player</span>
+                 <SegmentedControl
+                    name="player"
+                    options={[
+                        { label: 'Standard', value: 'standard' },
+                        { label: 'Custom (Demo)', value: 'custom' }
+                    ]}
+                    value={useCustomPlayer ? 'custom' : 'standard'}
+                    onChange={(val) => setUseCustomPlayer(val === 'custom')}
+                 />
              </div>
           </div>
+
+          {useCustomPlayer && (
+            <div className="w-full text-center py-2 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] uppercase font-bold tracking-widest">
+                Demo Mode: Playing sample stream (API Source Unavailable)
+            </div>
+          )}
 
           <div className="flex items-center justify-between md:justify-end gap-2 border-t border-dark-700 pt-3 md:border-0 md:pt-0">
              <span className="md:hidden text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Navigation</span>

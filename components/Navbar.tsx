@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
       >
         {/* Background Layer - Hidden on Mobile to remove solid black */}
         <div 
-            className={`absolute inset-0 bg-black border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
+            className={`absolute inset-0 bg-black/80 backdrop-blur-xl backdrop-saturate-150 border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
                 isScrolled ? 'opacity-100 shadow-lg' : 'opacity-0 border-transparent'
             }`} 
         />
@@ -94,13 +94,14 @@ export const Navbar: React.FC = () => {
             {/* Center: Search - Stretched on Mobile */}
             <div className="flex flex-1 items-center justify-start md:justify-end max-w-4xl mx-auto">
               <form onSubmit={handleSearch} className="w-full relative group mt-0 md:mt-3">
-                <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
+                <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black/40 border-zinc-800 backdrop-blur-md' : 'bg-black/40 border-white/10 backdrop-blur-md'}`}>
                   <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="SEARCH..."
+                    aria-label="Search anime"
                     className="bg-transparent border-none outline-none text-xs md:text-base text-white placeholder-zinc-600 ml-2 md:ml-3 w-full skew-x-[12deg] font-mono tracking-wider uppercase"
                   />
                   {/* Subtle Corner Accents */}
@@ -123,12 +124,12 @@ export const Navbar: React.FC = () => {
                   </Link>
                 )}
 
-                <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group">
+                <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group" aria-label="Notifications">
                     <BellRing className="w-5 h-5 group-hover:animate-ping absolute opacity-30" />
                     <BellRing className="w-5 h-5 relative z-10" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-400 rounded-none rotate-45 shadow-[0_0_5px_#ff0033]" />
                 </button>
-                <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors">
+                <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors" aria-label="Admin settings">
                    <Settings2 className="w-5 h-5 hover:rotate-180 transition-transform duration-700" />
                 </Link>
                 
@@ -142,6 +143,7 @@ export const Navbar: React.FC = () => {
                         onClick={logout}
                         className="bg-zinc-800 hover:bg-brand-400 text-white hover:text-black p-2 transition-all skew-x-[-12deg]"
                         title="Logout"
+                        aria-label="Logout"
                       >
                          <LogOut className="w-4 h-4 skew-x-[12deg]" />
                       </button>
@@ -159,6 +161,7 @@ export const Navbar: React.FC = () => {
               <button 
                 onClick={() => setIsMobileOpen(true)}
                 className="lg:hidden text-white p-1.5 md:p-2 hover:text-brand-400 transition-colors border border-white/10 bg-white/5 skew-x-[-10deg]"
+                aria-label="Open menu"
               >
                 <AlignRight className="w-5 h-5 md:w-6 md:h-6 skew-x-[10deg]" />
               </button>
@@ -197,6 +200,7 @@ export const Navbar: React.FC = () => {
                   <button 
                     onClick={() => setIsMobileOpen(false)}
                     className="p-2 text-zinc-400 hover:text-brand-400 transition-colors border border-white/10 hover:border-brand-400"
+                    aria-label="Close menu"
                   >
                     <X className="w-6 h-6" />
                   </button>
