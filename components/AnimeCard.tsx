@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Anime } from '../types';
 import { Play, MoreVertical } from 'lucide-react';
+import { Tilt } from './Tilt';
 
 interface AnimeCardProps {
   anime: Anime;
@@ -35,12 +36,13 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
     return (
       <div className={`${widthClass} flex-shrink-0 group/card relative`}>
         <Link to={`/watch/${encodeURIComponent(anime.id)}`} className="block">
+          <Tilt className="w-full h-full" scale={1.05} max={10}>
           {/* Thumbnail Container */}
-          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover/card:border-brand-400/50 transition-all">
+          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover/card:border-brand-400/50 transition-all shadow-lg">
             <img
               src={anime.banner || anime.image || anime.poster}
               alt={anime.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+              className="w-full h-full object-cover"
               loading="lazy"
             />
             
@@ -74,6 +76,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
                <div className="h-full bg-brand-400" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
+          </Tilt>
         </Link>
       </div>
     );
@@ -83,13 +86,14 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
   return (
     <div className={`${widthClass} flex-shrink-0 group/card relative`}>
       <Link to={`/anime/${anime.id}`} className="block relative">
+        <Tilt className="w-full mb-2 md:mb-3" scale={1.05} max={12}>
         {/* Card Container */}
-        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 mb-2 md:mb-3 transition-all duration-300 rounded-sm group-hover/card:shadow-[0_0_20px_rgba(246,195,67,0.1)]">
+        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 transition-all duration-300 rounded-sm group-hover/card:shadow-[0_0_20px_rgba(255,0,51,0.3)] shadow-md">
           
           <img
             src={anime.poster || anime.image} 
             alt={anime.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
           
@@ -110,6 +114,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
              </div>
           </div>
         </div>
+        </Tilt>
 
         {/* Text Content */}
         <div>
