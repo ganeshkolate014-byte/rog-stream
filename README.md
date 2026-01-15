@@ -29,17 +29,22 @@
 ### 🌟 Key Features
 
 * **AI Integration:** Smart content suggestions and interaction powered by Gemini API.
-* **High Performance:** Optimized for fast loading and smooth streaming.
+* **High Performance:** Optimized for fast loading and smooth streaming with HLS support.
 * **Responsive Design:** Fully functional across Desktop, Tablet, and Mobile devices.
 * **Modern UI:** Clean, dark-themed interface for a cinematic feel.
+* **Customizable Experience:** Admin settings to tweak UI and API configurations.
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** React / Next.js
+* **Frontend:** React / Vite
+* **State Management:** TanStack Query
+* **Routing:** React Router
 * **AI Engine:** Google Gemini API
-* **Styling:** CSS / Tailwind
+* **Streaming:** HLS.js
+* **Backend Services:** Firebase
+* **Styling:** Tailwind CSS
 * **Deployment:** Vercel
 
 ---
@@ -57,7 +62,7 @@ Follow these instructions to set up the project locally on your machine.
 
 1.  **Clone the repository** (or download the source code):
     ```bash
-    git clone [https://github.com/your-username/rogstream.git](https://github.com/your-username/rogstream.git)
+    git clone https://github.com/your-username/rogstream.git
     cd rogstream
     ```
 
@@ -67,10 +72,11 @@ Follow these instructions to set up the project locally on your machine.
     ```
 
 3.  **Environment Setup**:
-    Create a `.env.local` file in the root directory and add your API keys:
+    Create a `.env` or `.env.local` file in the root directory and add your API keys:
     ```bash
-    GEMINI_API_KEY=your_actual_api_key_here
+    VITE_GEMINI_API_KEY=your_actual_api_key_here
     ```
+    > **Note:** You can also configure the Gemini API Key directly in the application via the **Admin Settings** page (`/admin`) without needing to rebuild or restart the server.
 
 4.  **Run Locally**:
     Start the development server:
@@ -89,7 +95,7 @@ This project is optimized for **Vercel**.
 1.  Push your code to a Git provider (GitHub, GitLab, etc.).
 2.  Import the project into [Vercel](https://vercel.com/new).
 3.  In the "Environment Variables" section during deployment, add:
-    * `GEMINI_API_KEY`
+    * `VITE_GEMINI_API_KEY`
 4.  Click **Deploy**.
 
 ---

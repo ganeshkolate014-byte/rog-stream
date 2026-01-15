@@ -8,7 +8,7 @@ const systemInstruction = "You are a friendly and knowledgeable anime expert. Yo
 const getAiClient = () => {
     // Attempt to get key from Env (Build time) OR Config (Runtime Frontend)
     const config = getConfig();
-    const apiKey = process.env.API_KEY || config.geminiApiKey;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || config.geminiApiKey;
     
     if (!apiKey) {
         throw new Error("API Key missing. Please configure 'Gemini API Key' in Admin Settings.");

@@ -355,6 +355,18 @@ export const Admin: React.FC = () => {
                                 </button>
                             </div>
                         </div>
+
+                        {/* Google Gemini API Key */}
+                        <div>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-1 block">Gemini AI API Key</label>
+                            <input
+                                type="password"
+                                value={config.geminiApiKey || ''}
+                                onChange={(e) => setConfig({...config, geminiApiKey: e.target.value})}
+                                className="w-full bg-dark-800 border border-dark-600 text-white px-3 py-3 text-sm focus:border-brand-400 outline-none placeholder-zinc-600 font-mono"
+                                placeholder="AI Key for Chat Assistant"
+                            />
+                        </div>
                     </div>
                 </div>
 
