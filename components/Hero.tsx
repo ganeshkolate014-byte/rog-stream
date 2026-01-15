@@ -20,7 +20,11 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
       target: containerRef,
       offset: ["start start", "end start"]
   });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+  // Background moves slower
+  const yBg = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  // Content moves faster (or different direction) to create depth
+  const yContent = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
 
   useEffect(() => {
     currentIndexRef.current = currentIndex;
@@ -177,7 +181,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           className="absolute inset-0"
         >
            {/* Layer 1: Background Image or Video */}
-           <motion.div style={{ y }} className="absolute inset-0">
+           <motion.div style={{ y: yBg }} className="absolute inset-0">
                 {isVideo ? (
                     <video
                         key={heroImage} // Key helps React re-mount the video element
@@ -237,7 +241,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           <div className="absolute inset-0 flex items-end justify-start z-30 pointer-events-none">
             {/* Added bottom padding to lift content off the edge */}
             <div className="max-w-[1600px] mx-auto px-4 md:px-12 w-full pb-8 md:pb-24 pointer-events-auto">
-              <div className="max-w-2xl flex flex-col items-start text-left relative z-40">
+              <motion.div style={{ y: yContent }} className="max-w-2xl flex flex-col items-start text-left relative z-40">
                 
                 {/* Brand/Logo Area (Title) */}
                 {config.showTitle && (
@@ -299,7 +303,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                   </button>
                 </motion.div>
 
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>

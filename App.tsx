@@ -79,7 +79,7 @@ const App: React.FC = () => {
             
             <footer className="bg-dark-900 border-t border-brand-400/20 py-12 mt-auto block relative overflow-hidden pb-[env(safe-area-inset-bottom)]">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-50"></div>
-                <Parallax offset={-30} direction="down">
+                <Parallax offset={-50} direction="down">
                 <div className="max-w-7xl mx-auto px-4 text-center">
                 <h2 className="text-3xl font-black text-white mb-4 font-display italic tracking-tighter">
                     <span className="text-brand-400">STREAMING</span>

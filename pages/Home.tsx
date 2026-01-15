@@ -19,7 +19,7 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
 
     return (
         <section className="mb-8 md:mb-12 relative group">
-            <Parallax offset={20} className="w-full">
+            <Parallax offset={60} className="w-full">
             <div className="max-w-[1600px] mx-auto px-3 md:px-6">
                 {/* Header */}
                 <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
@@ -126,7 +126,7 @@ const ContinueWatchingSection: React.FC = () => {
 
     return (
         <section className="mb-8 md:mb-12 relative group">
-            <Parallax offset={20} className="w-full">
+            <Parallax offset={60} className="w-full">
             <div className="max-w-[1600px] mx-auto px-3 md:px-6">
                 <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
                      <div>
