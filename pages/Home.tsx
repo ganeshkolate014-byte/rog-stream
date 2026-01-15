@@ -10,6 +10,7 @@ import { ChevronRight, AlertTriangle, LayoutTemplate } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress } from '../services/firebase';
 import { motion } from 'framer-motion';
+import { Parallax } from '../components/Parallax';
 
 const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'portrait' | 'landscape'; link?: string; subtitle?: string }> = ({ 
     title, items, variant = 'portrait', link, subtitle 
@@ -18,6 +19,7 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
 
     return (
         <section className="mb-8 md:mb-12 relative group">
+            <Parallax offset={20} className="w-full">
             <div className="max-w-[1600px] mx-auto px-3 md:px-6">
                 {/* Header */}
                 <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
@@ -57,6 +59,7 @@ const HorizontalSection: React.FC<{ title: string; items: Anime[]; variant?: 'po
                     <div className="absolute top-0 right-0 bottom-4 w-12 bg-gradient-to-l from-dark-950 to-transparent pointer-events-none md:hidden" />
                 </div>
             </div>
+            </Parallax>
         </section>
     );
 };
@@ -123,6 +126,7 @@ const ContinueWatchingSection: React.FC = () => {
 
     return (
         <section className="mb-8 md:mb-12 relative group">
+            <Parallax offset={20} className="w-full">
             <div className="max-w-[1600px] mx-auto px-3 md:px-6">
                 <div className="flex items-end justify-between mb-3 md:mb-4 border-l-4 border-brand-400 pl-3 md:pl-4">
                      <div>
@@ -145,6 +149,7 @@ const ContinueWatchingSection: React.FC = () => {
                     </div>
                 </div>
             </div>
+            </Parallax>
         </section>
     );
 };

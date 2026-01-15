@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Play, Plus, AudioWaveform } from 'lucide-react';
 import { Anime } from '../types';
 
@@ -13,6 +13,14 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   const [displayItems, setDisplayItems] = useState<Anime[]>([]);
   const currentIndexRef = useRef(currentIndex);
   const transitionTriggeredRef = useRef(false);
+
+  // Parallax Setup
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+      target: containerRef,
+      offset: ["start start", "end start"]
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   useEffect(() => {
     currentIndexRef.current = currentIndex;
@@ -158,7 +166,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
   const isVideo = current.posterType === 'video';
 
   return (
-    <div className={`relative w-full ${getAspectRatioClass()} overflow-hidden bg-[#050505] group font-sans transition-all duration-500`}>
+    <div ref={containerRef} className={`relative w-full ${getAspectRatioClass()} overflow-hidden bg-[#050505] group font-sans transition-all duration-500`}>
       <AnimatePresence mode="wait">
         <motion.div
           key={current.id}
@@ -169,7 +177,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
           className="absolute inset-0"
         >
            {/* Layer 1: Background Image or Video */}
-           <div className="absolute inset-0">
+           <motion.div style={{ y }} className="absolute inset-0">
                 {isVideo ? (
                     <video
                         key={heroImage} // Key helps React re-mount the video element
@@ -177,7 +185,7 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                         autoPlay
                         muted
                         playsInline
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center scale-110" // Added scale to prevent gaps during parallax
                         onTimeUpdate={(e) => {
                             const video = e.currentTarget;
                             // Check for duration to avoid NaN issues on load
@@ -191,11 +199,32 @@ export const Hero: React.FC<HeroProps> = ({ items }) => {
                     <img
                         src={heroImage}
                         alt={current.title}
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center scale-110" // Added scale to prevent gaps during parallax
                     />
                 )}
-                
-                 {/* Vignette / Gradients */}
+           </motion.div>
+
+           {/* Vignette / Gradients - Kept absolute and separate to stay fixed or move with parent?
+               Usually gradients should stay with the image if they are part of the image composition,
+               but here they provide text contrast. Let's keep them fixed to the container or move them?
+               If I wrap them in motion.div style={{ y }}, they move with image.
+               Let's keep them fixed (not wrapped in y) to ensure text remains readable as image moves.
+               Actually, Layer 1 was the parent of gradients in previous code.
+               Wait, in previous code:
+               <div className="absolute inset-0">
+                  <video/img ... />
+                  <div gradients ... />
+               </div>
+
+               If I split them, I need to restructure.
+               If I wrap the whole Layer 1 div with motion.div, the gradients will move too.
+               That is probably desired so the vignette stays with the image edges?
+               But "w-full h-full object-cover" fills the container.
+               If I move it down 50%, the top will show empty space if I don't scale it.
+               I added scale-110.
+           */}
+           <div className="absolute inset-0 pointer-events-none">
+                 {/* 1. Left Gradient (Main Text Backdrop) */}
                  
                  {/* 1. Left Gradient (Main Text Backdrop) */}
                  <div className="absolute inset-y-0 left-0 w-full md:w-[60%] bg-gradient-to-r from-[#050505]/95 via-[#050505]/70 to-transparent" />
