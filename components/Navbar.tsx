@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
       >
         {/* Background Layer - Hidden on Mobile to remove solid black */}
         <div 
-            className={`absolute inset-0 bg-black border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
+            className={`absolute inset-0 bg-black/80 backdrop-blur-xl backdrop-saturate-150 border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
                 isScrolled ? 'opacity-100 shadow-lg' : 'opacity-0 border-transparent'
             }`} 
         />
@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
             {/* Center: Search - Stretched on Mobile */}
             <div className="flex flex-1 items-center justify-start md:justify-end max-w-4xl mx-auto">
               <form onSubmit={handleSearch} className="w-full relative group mt-0 md:mt-3">
-                <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black border-zinc-800' : 'bg-black/60 border-white/10 backdrop-blur-sm'}`}>
+                <div className={`relative flex items-center border rounded-none px-3 py-1.5 md:px-4 md:py-2 transition-all duration-300 group-focus-within:border-brand-400 skew-x-[-12deg] w-full ${isScrolled ? 'bg-black/40 border-zinc-800 backdrop-blur-md' : 'bg-black/40 border-white/10 backdrop-blur-md'}`}>
                   <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-zinc-500 skew-x-[12deg] group-focus-within:text-brand-400 transition-colors flex-shrink-0" />
                   <input
                     type="text"
