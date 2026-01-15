@@ -38,7 +38,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
         <Link to={`/watch/${encodeURIComponent(anime.id)}`} className="block">
           <Tilt className="w-full h-full" scale={1.05} max={10}>
           {/* Thumbnail Container */}
-          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover/card:border-brand-400/50 transition-all shadow-lg">
+          <div className="relative aspect-video bg-dark-800 overflow-hidden rounded-sm border border-white/5 group-hover/card:border-white/20 transition-all shadow-lg">
             <img
               src={anime.banner || anime.image || anime.poster}
               alt={anime.title}
@@ -51,7 +51,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
             
             {/* Play Overlay - Scoped to group/card */}
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/card:opacity-100 group-hover/card:bg-black/40 transition-all duration-300">
-               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center scale-75 group-hover/card:scale-110 group-hover/card:bg-brand-400 group-hover/card:border-brand-400 transition-all duration-300">
+               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/80 border border-white/20 flex items-center justify-center scale-75 group-hover/card:scale-110 group-hover/card:bg-white group-hover/card:border-white transition-all duration-300">
                   <Play className="w-3 h-3 md:w-4 md:h-4 fill-white text-white group-hover/card:fill-black group-hover/card:text-black ml-0.5" />
                </div>
             </div>
@@ -61,7 +61,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
               <h4 className="text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5 line-clamp-1">
                   {anime.title}
               </h4>
-              <h3 className="text-xs md:text-sm font-bold text-white group-hover/card:text-brand-400 transition-colors line-clamp-1 leading-tight">
+              <h3 className="text-xs md:text-sm font-bold text-white group-hover/card:text-white transition-colors line-clamp-1 leading-tight">
                   Episode {anime.episodes?.sub || anime.episodes?.eps || '1'}
               </h3>
             </div>
@@ -73,7 +73,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
 
             {/* Progress Bar */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 md:h-1 bg-white/20">
-               <div className="h-full bg-brand-400" style={{ width: `${progress}%` }}></div>
+               <div className="h-full bg-white" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
           </Tilt>
@@ -88,7 +88,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
       <Link to={`/anime/${anime.id}`} className="block relative">
         <Tilt className="w-full mb-2 md:mb-3" scale={1.05} max={12}>
         {/* Card Container */}
-        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 transition-all duration-300 rounded-sm group-hover/card:shadow-[0_0_20px_rgba(255,0,51,0.3)] shadow-md">
+        <div className="relative aspect-[2/3] overflow-hidden bg-dark-800 transition-all duration-300 rounded-sm group-hover/card:shadow-lg shadow-md">
           
           <img
             src={anime.poster || anime.image} 
@@ -102,14 +102,14 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
 
           {/* Rank Badge */}
           {rank && (
-             <div className="absolute top-0 left-0 bg-brand-400 text-black w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-sm md:text-lg font-black clip-path-polygon z-10">
+             <div className="absolute top-0 left-0 bg-white text-black w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-sm md:text-lg font-black clip-path-polygon z-10">
                {rank}
              </div>
           )}
           
           {/* Hover Overlay (Minimal) - Scoped to group/card */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
-             <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-brand-400/90 shadow-lg transform scale-50 group-hover/card:scale-100 transition-all duration-300">
+             <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white shadow-lg transform scale-50 group-hover/card:scale-100 transition-all duration-300">
                 <Play className="w-4 h-4 md:w-5 md:h-5 text-black fill-black ml-0.5" />
              </div>
           </div>
@@ -118,7 +118,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, rank, variant = 'po
 
         {/* Text Content */}
         <div>
-          <h3 className="text-xs md:text-base font-bold text-zinc-200 group-hover/card:text-brand-400 transition-colors line-clamp-1 leading-tight" title={anime.title}>
+          <h3 className="text-xs md:text-base font-bold text-zinc-200 group-hover/card:text-white transition-colors line-clamp-1 leading-tight" title={anime.title}>
             {anime.title}
           </h3>
           <div className="flex items-center justify-between mt-1">

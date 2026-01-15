@@ -69,7 +69,7 @@ const App: React.FC = () => {
         <Trackpad />
         
         {/* Main Layout Container */}
-        <div className="min-h-[100dvh] bg-dark-950 text-zinc-100 font-sans selection:bg-brand-500 selection:text-white flex flex-col overflow-x-hidden animate-in fade-in duration-700">
+        <div className="min-h-[100dvh] bg-dark-950 text-zinc-100 font-sans selection:bg-white selection:text-black flex flex-col overflow-x-hidden animate-in fade-in duration-700">
             
             <Navbar />
             
@@ -77,21 +77,21 @@ const App: React.FC = () => {
                 <AppRoutes />
             </div>
             
-            <footer className="bg-dark-900 border-t border-brand-400/20 py-12 mt-auto block relative overflow-hidden pb-[env(safe-area-inset-bottom)]">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-400 to-transparent opacity-50"></div>
+            <footer className="bg-dark-900 border-t border-white/20 py-12 mt-auto block relative overflow-hidden pb-[env(safe-area-inset-bottom)]">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-50"></div>
                 <Parallax offset={-50} direction="down">
                 <div className="max-w-7xl mx-auto px-4 text-center">
                 <h2 className="text-3xl font-black text-white mb-4 font-display italic tracking-tighter">
-                    <span className="text-brand-400">STREAMING</span>
+                    <span className="text-white">STREAMING</span>
                 </h2>
                 <p className="text-zinc-500 text-sm max-w-md mx-auto mb-8 font-mono">
                     PREMIUM ANIME EXPERIENCE.
                 </p>
                 <div className="flex justify-center gap-6 mb-8">
-                    <a href="#/benefits" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Why Join?</a>
-                    <a href="#/documentation" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">How It Works</a>
-                    <a href="#/api-docs" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">API Docs</a>
-                    <a href="#/admin" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Config</a>
+                    <a href="#/benefits" className="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Why Join?</a>
+                    <a href="#/documentation" className="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">How It Works</a>
+                    <a href="#/api-docs" className="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">API Docs</a>
+                    <a href="#/admin" className="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Config</a>
                 </div>
                 <div className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
                     &copy; {new Date().getFullYear()} ALL RIGHTS RESERVED.
