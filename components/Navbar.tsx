@@ -101,6 +101,7 @@ export const Navbar: React.FC = () => {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="SEARCH..."
+                    aria-label="Search anime"
                     className="bg-transparent border-none outline-none text-xs md:text-base text-white placeholder-zinc-600 ml-2 md:ml-3 w-full skew-x-[12deg] font-mono tracking-wider uppercase"
                   />
                   {/* Subtle Corner Accents */}
@@ -123,12 +124,12 @@ export const Navbar: React.FC = () => {
                   </Link>
                 )}
 
-                <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group">
+                <button className="text-zinc-400 hover:text-brand-400 transition-colors relative group" aria-label="Notifications">
                     <BellRing className="w-5 h-5 group-hover:animate-ping absolute opacity-30" />
                     <BellRing className="w-5 h-5 relative z-10" />
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-400 rounded-none rotate-45 shadow-[0_0_5px_#ff0033]" />
                 </button>
-                <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors">
+                <Link to="/admin" className="text-zinc-400 hover:text-brand-400 transition-colors" aria-label="Admin settings">
                    <Settings2 className="w-5 h-5 hover:rotate-180 transition-transform duration-700" />
                 </Link>
                 
@@ -142,6 +143,7 @@ export const Navbar: React.FC = () => {
                         onClick={logout}
                         className="bg-zinc-800 hover:bg-brand-400 text-white hover:text-black p-2 transition-all skew-x-[-12deg]"
                         title="Logout"
+                        aria-label="Logout"
                       >
                          <LogOut className="w-4 h-4 skew-x-[12deg]" />
                       </button>
@@ -159,6 +161,7 @@ export const Navbar: React.FC = () => {
               <button 
                 onClick={() => setIsMobileOpen(true)}
                 className="lg:hidden text-white p-1.5 md:p-2 hover:text-brand-400 transition-colors border border-white/10 bg-white/5 skew-x-[-10deg]"
+                aria-label="Open menu"
               >
                 <AlignRight className="w-5 h-5 md:w-6 md:h-6 skew-x-[10deg]" />
               </button>
@@ -197,6 +200,7 @@ export const Navbar: React.FC = () => {
                   <button 
                     onClick={() => setIsMobileOpen(false)}
                     className="p-2 text-zinc-400 hover:text-brand-400 transition-colors border border-white/10 hover:border-brand-400"
+                    aria-label="Close menu"
                   >
                     <X className="w-6 h-6" />
                   </button>
