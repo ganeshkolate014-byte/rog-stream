@@ -15,6 +15,7 @@ import { Benefits } from './pages/Benefits';
 import { Profile } from './pages/Profile';
 import { Documentation } from './pages/Documentation';
 import { ApiDocs } from './pages/ApiDocs'; 
+import { Support } from './pages/Support';
 import { Trackpad } from './components/Trackpad';
 import { AuthProvider } from './context/AuthContext';
 
@@ -52,6 +53,7 @@ const AppRoutes = () => {
                 <Route path="/genres" element={<Genres />} />
                 <Route path="/animes/:category" element={<Category />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/support" element={<Support />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </AnimatePresence>
@@ -87,6 +89,7 @@ const App: React.FC = () => {
                     <a href="#/benefits" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Why Join?</a>
                     <a href="#/documentation" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">How It Works</a>
                     <a href="#/api-docs" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">API Docs</a>
+                    <a href="#/support" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Support</a>
                     <a href="#/admin" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Config</a>
                 </div>
                 <div className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
