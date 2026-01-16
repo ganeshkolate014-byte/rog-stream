@@ -137,6 +137,7 @@ export const useApi = <T>(
     retry: 1,
     enabled: !!finalEndpoint,
     refetchOnWindowFocus: false,
+    staleTime: 300000, // 5 minutes cache
     ...options
   });
 };
