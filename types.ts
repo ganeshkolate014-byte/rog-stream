@@ -94,6 +94,7 @@ export interface AnimeDetail {
   episodes: Episode[];
   banner?: string;
   poster?: string; // Fallback
+  malScore?: string;
 }
 
 export interface EpisodeList {

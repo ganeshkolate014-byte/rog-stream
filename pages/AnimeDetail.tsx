@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
-import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle } from 'lucide-react';
+import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle, Star, Users } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +35,9 @@ export const AnimeDetail: React.FC = () => {
   const { user } = useAuth();
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   
+  // MAL Data State
+  const [malData, setMalData] = useState<{ score: number | null; scored_by: number | null; url: string | null } | null>(null);
+
   // Interaction states
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,6 +66,29 @@ export const AnimeDetail: React.FC = () => {
     };
     fetchProgress();
   }, [id, user]);
+
+  // Fetch MAL Data
+  useEffect(() => {
+    if (anime?.malID) {
+        setMalData(null); // Reset
+        const fetchMalData = async () => {
+            try {
+                const response = await fetch(`https://api.jikan.moe/v4/anime/${anime.malID}`);
+                const json = await response.json();
+                if (json.data) {
+                    setMalData({
+                        score: json.data.score,
+                        scored_by: json.data.scored_by,
+                        url: json.data.url
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching MAL data:", error);
+            }
+        };
+        fetchMalData();
+    }
+  }, [anime?.malID]);
   
   // Reset state on ID change
   useEffect(() => {
@@ -175,6 +201,36 @@ export const AnimeDetail: React.FC = () => {
                 )}
                 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-zinc-300 mt-2 md:mt-4 border-t border-white/10 pt-2 md:pt-4">
+                    
+                    {/* MAL Data Block */}
+                    {(malData?.score || anime.malScore) && (
+                        <a 
+                            href={malData?.url || (anime.malID ? `https://myanimelist.net/anime/${anime.malID}` : '#')}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-3 px-3 py-1 bg-[#2e51a2]/10 border border-[#2e51a2]/30 rounded-sm hover:bg-[#2e51a2]/20 transition-all group/mal ${!anime.malID && 'pointer-events-none'}`}
+                        >
+                            <div className="flex items-center gap-1.5">
+                                <Star className="w-3.5 h-3.5 text-white fill-white group-hover/mal:text-[#2e51a2] transition-colors" />
+                                <span className="text-white font-black">{malData?.score || anime.malScore}</span>
+                            </div>
+                            {malData?.scored_by ? (
+                                <div className="flex items-center gap-1.5 pl-3 border-l border-[#2e51a2]/30 text-[10px] text-zinc-400 group-hover/mal:text-zinc-200 font-mono">
+                                    <Users className="w-3 h-3 text-[#2e51a2]" />
+                                    <span>
+                                        {malData.scored_by >= 1000000 
+                                            ? (malData.scored_by / 1000000).toFixed(1) + 'M' 
+                                            : malData.scored_by >= 1000 
+                                                ? (malData.scored_by / 1000).toFixed(1) + 'K' 
+                                                : malData.scored_by}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="text-[10px] font-bold text-[#2e51a2] pl-2 border-l border-[#2e51a2]/30">MAL</span>
+                            )}
+                        </a>
+                    )}
+
                     {anime.type && <div className="flex items-center gap-1.5"><Tv className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.type}</span></div>}
                     {anime.totalEpisodes && <div className="flex items-center gap-1.5"><Layers className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.totalEpisodes} EPS</span></div>}
                     <div className="flex items-center gap-1.5"><Globe className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.hasSub && 'SUB'}{anime.hasSub && anime.hasDub && ' | '}{anime.hasDub && 'DUB'}</span></div>
@@ -290,7 +346,7 @@ export const AnimeDetail: React.FC = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="p-12 bg-dark-800/50 text-center border border-dashed border-dark-600">
+                    <div className="p-12 bg-dark-800/50 text-center border border-dark-600">
                         <p className="text-zinc-500 font-mono text-sm">NO EPISODE DATA AVAILABLE</p>
                     </div>
                 )}

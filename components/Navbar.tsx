@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, AlignRight, X, CircleUser, BellRing, Compass, CalendarDays, TrendingUp, Settings2, LogIn, Home, LogOut, ChevronLeft, Crown, Info, FileCode2, Clapperboard, LayoutGrid } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
+  const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollRatio, setScrollRatio] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [query, setQuery] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // Handle Scroll Effect
-  useEffect(() => {
-    const handleScroll = () => {
-      // Increased threshold to 50 to prevent micro-jitters at top
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Handle Scroll Effect using Framer Motion to avoid direct window.scrollY access
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 50);
+    const ratio = Math.min(latest / 150, 1);
+    setScrollRatio(ratio);
+  });
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -38,13 +37,12 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Trending', path: '/animes/trending' },
-    { name: 'Genres', path: '/genres' }, // Added Genres
+    { name: 'Genres', path: '/genres' }, 
     { name: 'Schedule', path: '/schedule' },
     { name: 'Movies', path: '/animes/movie' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
-  const isHome = location.pathname === '/';
 
   return (
     <>
@@ -54,20 +52,32 @@ export const Navbar: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 h-14 md:h-20"
       >
-        {/* Background Layer - Hidden on Mobile to remove solid black */}
+        {/* Background Layer - Dynamic Opacity for PC */}
         <div 
-            className={`absolute inset-0 bg-black border-b border-white/5 transition-opacity duration-300 ease-in-out hidden md:block ${
-                isScrolled ? 'opacity-100 shadow-lg' : 'opacity-0 border-transparent'
-            }`} 
+            className="absolute inset-0 bg-black hidden md:block transition-shadow duration-300"
+            style={{ 
+                opacity: scrollRatio,
+                borderBottom: `1px solid rgba(255, 255, 255, ${scrollRatio * 0.05})`,
+                boxShadow: scrollRatio > 0.8 ? '0 10px 15px -3px rgb(0 0 0 / 0.3)' : 'none'
+            }} 
         />
         
-        {/* Gradient Overlay - Always visible on mobile for text contrast */}
-        <div className={`absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 ${isScrolled ? 'opacity-100 md:opacity-0' : 'opacity-100'}`} />
+        {/* Gradient Overlay - Mobile and Initial Top State */}
+        <div 
+            className="absolute inset-0 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-500 md:hidden" 
+            style={{ opacity: isScrolled ? 1 : 0.8 }}
+        />
+        
+        {/* Subtle top gradient for PC when at the top for visibility */}
+        <div 
+            className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent hidden md:block pointer-events-none transition-opacity duration-300"
+            style={{ opacity: 1 - scrollRatio }}
+        />
 
         <div className="relative z-20 max-w-[1600px] mx-auto px-3 md:px-8 h-full">
           <div className="flex items-center h-full gap-3 md:gap-8">
             
-            {/* Left: Logo & Nav (Desktop Only - Completely Hidden on Mobile) */}
+            {/* Left: Logo & Nav */}
             <div className="hidden md:flex items-center gap-12 flex-shrink-0">
               
               {/* Logo */}
@@ -110,7 +120,7 @@ export const Navbar: React.FC = () => {
               </form>
             </div>
 
-            {/* Right: Actions - Fixed Flex */}
+            {/* Right: Actions */}
             <div className="flex items-center gap-2 md:gap-6 flex-shrink-0 ml-auto md:ml-0">
               
               {/* Desktop Icons */}

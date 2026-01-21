@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate, useNavigationType } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import Lenis from '@studio-freight/lenis';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { AnimeDetail } from './pages/AnimeDetail';
@@ -59,6 +60,26 @@ const AppRoutes = () => {
 };
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      smoothTouch: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
