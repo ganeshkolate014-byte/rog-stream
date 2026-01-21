@@ -219,18 +219,18 @@ export const AnimeDetail: React.FC = () => {
             </div>
 
             <div className="flex flex-col justify-end text-left z-10 w-full mb-1 md:mb-0">
-                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
-                    {anime.status && <span className={`px-1.5 py-0.5 text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${anime.status === 'Completed' ? 'bg-green-500 text-black' : 'bg-brand-400 text-black'}`}>{anime.status}</span>}
-                    {anime.type && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.type}</span>}
-                    {anime.season && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.season}</span>}
-                </div>
-
                 <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white uppercase font-display tracking-tighter drop-shadow-xl line-clamp-3">
                     {anime.title}
                 </h1>
                 {anime.japaneseTitle && (
                     <h2 className="text-zinc-400 font-display text-xs md:text-xl uppercase tracking-wider mt-0.5 md:mt-1 truncate">RE: {anime.japaneseTitle}</h2>
                 )}
+
+                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 my-2 md:my-3">
+                    {anime.status && <span className={`px-1.5 py-0.5 text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${anime.status === 'Completed' ? 'bg-green-500 text-black' : 'bg-brand-400 text-black'}`}>{anime.status}</span>}
+                    {anime.type && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.type}</span>}
+                    {anime.season && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.season}</span>}
+                </div>
                 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-zinc-300 mt-2 md:mt-4 border-t border-white/10 pt-2 md:pt-4">
                     {displayScore && (
