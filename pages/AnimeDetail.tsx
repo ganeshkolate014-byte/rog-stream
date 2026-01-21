@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
-import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle, Star } from 'lucide-react';
+import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle, Star, Users } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +38,12 @@ export const AnimeDetail: React.FC = () => {
   // Interaction states
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Extra MAL Data State
+  const [malData, setMalData] = useState<{ score: number | null; scored_by: number | null } | null>(null);
+  
+  // Page Ready State (Blocks rendering until Rating is fetched)
+  const [isRatingLoading, setIsRatingLoading] = useState(true);
 
   const { data: anime, isLoading, isError } = useApi<AnimeDetailType>(
       constructUrl('details', { id })
@@ -63,10 +69,53 @@ export const AnimeDetail: React.FC = () => {
     };
     fetchProgress();
   }, [id, user]);
+
+  // Fetch MAL Data & Manage Page Loading
+  useEffect(() => {
+    // If anime details are still loading, do nothing yet (keep showing skeleton via isRatingLoading=true default or isLoading=true)
+    if (isLoading) return;
+
+    if (!anime) {
+        // Error or empty data, stop loading to show error state
+        setIsRatingLoading(false);
+        return;
+    }
+
+    if (anime.malID) {
+        // Ensure loading is true while we fetch rating
+        setIsRatingLoading(true);
+        const fetchMalStats = async () => {
+            try {
+                const res = await fetch(`https://api.jikan.moe/v4/anime/${anime.malID}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.data) {
+                        setMalData({
+                            score: data.data.score,
+                            scored_by: data.data.scored_by
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to fetch MAL stats", e);
+            } finally {
+                // Done fetching rating, unblock page
+                setIsRatingLoading(false);
+            }
+        };
+        fetchMalStats();
+    } else {
+        // No MAL ID, no rating to fetch, unblock page immediately
+        setMalData(null);
+        setIsRatingLoading(false);
+    }
+  }, [anime, isLoading]);
   
   // Reset state on ID change
   useEffect(() => {
-    // Removed window.scrollTo(0,0) here to let App.tsx handle it
+    // Reset loading to true to show skeleton when switching between animes
+    setIsRatingLoading(true);
+    setMalData(null);
     setShowFullDesc(false);
     setCopied(false);
     setIsSaving(false);
@@ -108,8 +157,15 @@ export const AnimeDetail: React.FC = () => {
         setIsSaving(false);
     }
   };
+  
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
 
-  if (isLoading) return <DetailSkeleton />;
+  // Block rendering until both main data AND rating are ready
+  if (isLoading || isRatingLoading) return <DetailSkeleton />;
 
   if (isError || !anime) {
      return (
@@ -133,6 +189,8 @@ export const AnimeDetail: React.FC = () => {
   const watchLink = nextEpisodeToWatch
     ? `/watch/${encodeURIComponent(nextEpisodeToWatch.id)}` 
     : (episodes.length > 0 ? `/watch/${encodeURIComponent(episodes[0].id)}` : '#');
+  
+  const displayScore = malData?.score || anime.malScore;
   
   return (
     <motion.div 
@@ -175,10 +233,20 @@ export const AnimeDetail: React.FC = () => {
                 )}
                 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-zinc-300 mt-2 md:mt-4 border-t border-white/10 pt-2 md:pt-4">
-                    {anime.malScore && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm">
-                            <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-500 fill-yellow-500" />
-                            <span className="text-yellow-500 font-bold">{anime.malScore}</span>
+                    {displayScore && (
+                        <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm">
+                                <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-500 fill-yellow-500" />
+                                <span className="text-yellow-500 font-bold">{displayScore}</span>
+                            </div>
+                            {malData?.scored_by && (
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-zinc-800 border border-zinc-700 rounded-sm" title={`${malData.scored_by.toLocaleString()} users rated`}>
+                                    <Users className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
+                                    <span className="text-zinc-400 font-bold text-[9px] md:text-[10px]">
+                                        {formatNumber(malData.scored_by)}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
                     {anime.type && <div className="flex items-center gap-1.5"><Tv className="w-3 h-3 md:w-4 md:h-4 text-brand-400" /><span>{anime.type}</span></div>}
