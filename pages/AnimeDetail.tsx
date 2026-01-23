@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
-import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle, Star, Users } from 'lucide-react';
+import { Play, Layers, AlertTriangle, ChevronDown, ChevronUp, Tv, Globe, Share2, BookmarkPlus, Check, CheckCircle, LoaderCircle, Star, Users, MessageSquareQuote } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +28,61 @@ const SectionHeader: React.FC<{ title: string; subtitle?: string; meta?: string;
     </div>
 );
 
+const ReviewCard: React.FC<{ review: any }> = ({ review }) => {
+    const [expanded, setExpanded] = useState(false);
+    
+    return (
+        <div className="bg-dark-800 border border-white/5 p-4 rounded-sm flex-shrink-0 w-[85vw] sm:w-[350px] md:w-[400px] snap-start h-fit flex flex-col group hover:border-brand-400/30 transition-colors">
+             <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-full overflow-hidden bg-dark-700 border border-white/10">
+                        <img 
+                            src={review.user?.images?.jpg?.image_url} 
+                            alt={review.user?.username} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => (e.currentTarget.src = "https://ui-avatars.com/api/?name=" + (review.user?.username || 'User') + "&background=random")}
+                        />
+                     </div>
+                     <div className="flex flex-col">
+                         <span className="text-sm font-bold text-white leading-none mb-1">{review.user?.username}</span>
+                         <span className="text-[10px] text-zinc-500 font-mono">{new Date(review.date).toLocaleDateString()}</span>
+                     </div>
+                 </div>
+                 {review.score && (
+                    <div className="flex items-center gap-1 px-2.5 py-1 bg-brand-400 text-black text-xs font-black rounded-sm transform -skew-x-12 shadow-[0_0_10px_rgba(255,0,51,0.3)]">
+                        <span className="skew-x-12">{review.score}</span>
+                    </div>
+                 )}
+             </div>
+             
+             <div className="text-xs md:text-sm text-zinc-400 leading-relaxed font-sans mb-4 flex-1">
+                 <p className={`${!expanded ? 'line-clamp-4' : ''} whitespace-pre-wrap`}>
+                     {review.review}
+                 </p>
+                 {review.review.length > 200 && (
+                     <button 
+                        onClick={() => setExpanded(!expanded)}
+                        className="text-[10px] text-brand-400 uppercase font-bold mt-2 hover:text-white transition-colors flex items-center gap-1"
+                     >
+                         {expanded ? <>Show Less <ChevronUp className="w-3 h-3" /></> : <>Read More <ChevronDown className="w-3 h-3" /></>}
+                     </button>
+                 )}
+             </div>
+             
+             <div className="mt-auto pt-3 border-t border-white/5 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                 {review.tags?.map((tag: string) => (
+                     <span key={tag} className="text-zinc-500 bg-dark-950 px-2 py-1 rounded-sm border border-white/5">{tag}</span>
+                 ))}
+                 {review.is_spoiler && (
+                     <span className="ml-auto text-red-500 bg-red-500/10 px-2 py-1 rounded-sm border border-red-500/20 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Spoiler
+                     </span>
+                 )}
+             </div>
+        </div>
+    );
+};
+
 
 export const AnimeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +96,7 @@ export const AnimeDetail: React.FC = () => {
   
   // Extra MAL Data State
   const [malData, setMalData] = useState<{ score: number | null; scored_by: number | null } | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   
   // Page Ready State (Blocks rendering until Rating is fetched)
   const [isRatingLoading, setIsRatingLoading] = useState(true);
@@ -70,52 +126,77 @@ export const AnimeDetail: React.FC = () => {
     fetchProgress();
   }, [id, user]);
 
-  // Fetch MAL Data & Manage Page Loading
+  // Fetch MAL Data & Reviews with Fallback Search
   useEffect(() => {
-    // If anime details are still loading, do nothing yet (keep showing skeleton via isRatingLoading=true default or isLoading=true)
     if (isLoading) return;
 
     if (!anime) {
-        // Error or empty data, stop loading to show error state
         setIsRatingLoading(false);
         return;
     }
 
-    if (anime.malID) {
-        // Ensure loading is true while we fetch rating
+    const loadMalInfo = async () => {
         setIsRatingLoading(true);
-        const fetchMalStats = async () => {
+        let effectiveMalId = anime.malID;
+
+        // If no MAL ID provided by backend, try to find it via Jikan Search
+        if (!effectiveMalId) {
             try {
-                const res = await fetch(`https://api.jikan.moe/v4/anime/${anime.malID}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.data) {
+                // Search Jikan
+                const searchRes = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(anime.title)}&limit=1`);
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (searchData.data && searchData.data.length > 0) {
+                        effectiveMalId = searchData.data[0].mal_id;
+                    }
+                }
+            } catch(e) {
+                console.warn("MAL ID Search failed", e);
+            }
+        }
+
+        if (effectiveMalId) {
+            // Fetch stats and reviews
+            try {
+                const statsRes = await fetch(`https://api.jikan.moe/v4/anime/${effectiveMalId}`);
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    if (statsData.data) {
                         setMalData({
-                            score: data.data.score,
-                            scored_by: data.data.scored_by
+                            score: statsData.data.score,
+                            scored_by: statsData.data.scored_by
                         });
                     }
                 }
             } catch (e) {
                 console.warn("Failed to fetch MAL stats", e);
-            } finally {
-                // Done fetching rating, unblock page
-                setIsRatingLoading(false);
             }
-        };
-        fetchMalStats();
-    } else {
-        // No MAL ID, no rating to fetch, unblock page immediately
-        setMalData(null);
+
+            try {
+                const reviewsRes = await fetch(`https://api.jikan.moe/v4/anime/${effectiveMalId}/reviews?sort=most_voted&limit=10`);
+                if (reviewsRes.ok) {
+                    const reviewsData = await reviewsRes.json();
+                    setReviews(reviewsData.data || []);
+                }
+            } catch (e) {
+                console.warn("Failed to fetch reviews", e);
+            }
+        } else {
+            setMalData(null);
+            setReviews([]);
+        }
+        
         setIsRatingLoading(false);
-    }
+    };
+
+    loadMalInfo();
   }, [anime, isLoading]);
   
   // Reset state on ID change
   useEffect(() => {
-    // Reset loading to true to show skeleton when switching between animes
     setIsRatingLoading(true);
     setMalData(null);
+    setReviews([]);
     setShowFullDesc(false);
     setCopied(false);
     setIsSaving(false);
@@ -212,19 +293,22 @@ export const AnimeDetail: React.FC = () => {
              <div className="absolute inset-0 bg-gradient-to-r from-dark-900/80 to-transparent" />
         </div>
 
-        {/* Forced row layout on mobile for Tablet UI density */}
-        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex flex-row items-end pb-8 md:pb-12 gap-4 md:gap-8">
+        <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex flex-row items-center pb-8 md:pb-12 gap-4 md:gap-8">
+            {/* Left: Poster */}
             <div className="w-28 sm:w-40 md:w-64 flex-shrink-0 -mb-10 md:-mb-28 shadow-2xl z-20">
                 <img src={anime.image} alt={anime.title} className="w-full aspect-[2/3] object-cover rounded-sm border border-white/10" />
             </div>
 
-            <div className="flex flex-col justify-end text-left z-10 w-full mb-1 md:mb-0">
-                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
-                    {anime.status && <span className={`px-1.5 py-0.5 text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${anime.status === 'Completed' ? 'bg-green-500 text-black' : 'bg-brand-400 text-black'}`}>{anime.status}</span>}
-                    {anime.type && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.type}</span>}
-                    {anime.season && <span className="px-1.5 py-0.5 bg-dark-800 border border-dark-600 text-zinc-400 text-[9px] md:text-[10px] font-bold uppercase">{anime.season}</span>}
+            {/* Right: Details Block */}
+            <div className="flex flex-col text-left z-10 w-full">
+                {/* Tags */}
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2 md:mb-4">
+                    {anime.status && <span className={`px-2 py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${anime.status === 'Completed' ? 'bg-green-500 text-black' : 'bg-brand-400 text-black'}`}>{anime.status}</span>}
+                    {anime.type && <span className="px-2 py-1 bg-dark-800 border border-dark-600 text-zinc-300 text-[9px] md:text-[10px] font-bold uppercase">{anime.type}</span>}
+                    {anime.season && <span className="px-2 py-1 bg-dark-800 border border-dark-600 text-zinc-300 text-[9px] md:text-[10px] font-bold uppercase">{anime.season}</span>}
                 </div>
 
+                {/* Title */}
                 <h1 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white uppercase font-display tracking-tighter drop-shadow-xl line-clamp-3">
                     {anime.title}
                 </h1>
@@ -232,10 +316,11 @@ export const AnimeDetail: React.FC = () => {
                     <h2 className="text-zinc-400 font-display text-xs md:text-xl uppercase tracking-wider mt-0.5 md:mt-1 truncate">RE: {anime.japaneseTitle}</h2>
                 )}
                 
+                {/* Stats & Buttons Container */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm text-zinc-300 mt-2 md:mt-4 border-t border-white/10 pt-2 md:pt-4">
                     {displayScore && (
                         <div className="flex items-center gap-2">
-                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm">
                                 <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-500 fill-yellow-500" />
                                 <span className="text-yellow-500 font-bold">{displayScore}</span>
                             </div>
@@ -262,7 +347,7 @@ export const AnimeDetail: React.FC = () => {
                         >
                             {copied ? <Check className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
                         </button>
-                         <button 
+                        <button 
                             onClick={handleSave}
                             disabled={!!userProgress || isSaving}
                             className={`p-2 rounded-full transition-all border border-white/5 ${
@@ -369,6 +454,18 @@ export const AnimeDetail: React.FC = () => {
                     </div>
                 )}
             </section>
+            
+            {/* Reviews Section */}
+            {reviews.length > 0 && (
+                <section>
+                    <SectionHeader title="Community" subtitle="Reviews" meta={`${reviews.length} POSTS`} />
+                    <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+                        {reviews.map((review, idx) => (
+                            <ReviewCard key={review.mal_id || idx} review={review} />
+                        ))}
+                    </div>
+                </section>
+            )}
             
             {(anime.relatedAnime?.length > 0 || anime.recommendations?.length > 0) && (
                 <section>
