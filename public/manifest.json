@@ -3,7 +3,7 @@
   "name": "Rog Anime Streaming",
   "short_name": "ROG",
   "description": "Stream anime with a fast, dark, app-like experience.",
-  "start_url": "/#/?source=pwa",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",

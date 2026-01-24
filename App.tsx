@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation, Navigate, useNavigationType } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigationType, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Lenis from '@studio-freight/lenis';
 import { Navbar } from './components/Navbar';
@@ -105,10 +105,10 @@ const App: React.FC = () => {
                     PREMIUM ANIME EXPERIENCE.
                 </p>
                 <div className="flex justify-center gap-6 mb-8">
-                    <a href="#/benefits" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Why Join?</a>
-                    <a href="#/documentation" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">How It Works</a>
-                    <a href="#/api-docs" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">API Docs</a>
-                    <a href="#/admin" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Config</a>
+                    <Link to="/benefits" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Why Join?</Link>
+                    <Link to="/documentation" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">How It Works</Link>
+                    <Link to="/api-docs" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">API Docs</Link>
+                    <Link to="/admin" className="text-zinc-500 hover:text-brand-400 text-xs font-bold uppercase tracking-widest transition-colors">Config</Link>
                 </div>
                 <div className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
                     &copy; {new Date().getFullYear()} ALL RIGHTS RESERVED.
