@@ -1,22 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
-import { AnimeDetail as AnimeDetailType, Anime } from '../types';
+import { AnimeDetail as AnimeDetailType } from '../types';
 import { 
   Play, 
   Share2, 
   Plus, 
   Check, 
+  ChevronDown, 
   Star, 
   Download,
   Bookmark,
   Calendar,
+  Clock,
   Layers,
-  Monitor,
-  Search,
-  LayoutGrid,
-  List,
-  ArrowRight
+  ArrowLeft
 } from 'lucide-react';
 import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
@@ -24,43 +22,17 @@ import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress, addToWatchlist, removeUserProgress } from '../services/firebase';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
-// --- Components for Detail Page ---
-
-const TabButton: React.FC<{ active: boolean; onClick: () => void; label: string; icon?: React.ElementType }> = ({ active, onClick, label, icon: Icon }) => (
-    <button 
-        onClick={onClick}
-        className={`relative px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all duration-300 group overflow-hidden ${active ? 'text-black' : 'text-zinc-500 hover:text-white'}`}
-    >
-        {/* Background Slide */}
-        <span className={`absolute inset-0 bg-brand-400 transform origin-left transition-transform duration-300 ease-out skew-x-[-12deg] ${active ? 'scale-x-100' : 'scale-x-0 group-hover:bg-white/10 group-hover:scale-x-100'}`} />
-        
-        <span className="relative z-10 flex items-center gap-2">
-            {Icon && <Icon className="w-4 h-4" />}
-            {label}
-        </span>
-    </button>
-);
-
-const InfoChip: React.FC<{ label: string, value: string | number, icon?: React.ElementType }> = ({ label, value, icon: Icon }) => (
-    <div className="flex flex-col">
-        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">{label}</span>
-        <div className="flex items-center gap-2 text-zinc-200 font-medium text-sm">
-            {Icon && <Icon className="w-3.5 h-3.5 text-brand-400" />}
-            {value || 'N/A'}
-        </div>
-    </div>
-);
-
 export const AnimeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Parallax Effect
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Parallax Hooks
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 800], [0, 300]);
-  const opacity = useTransform(scrollY, [0, 500], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 500], [1, 1.1]);
+  const heroOpacity = useTransform(scrollY, [0, 500], [1, 0.3]);
+  const heroBlur = useTransform(scrollY, [0, 500], [0, 10]);
   const contentY = useTransform(scrollY, [0, 500], [0, -50]);
 
   // Data States
@@ -69,11 +41,10 @@ export const AnimeDetail: React.FC = () => {
   );
   
   // Interaction States
+  const [showFullDesc, setShowFullDesc] = useState(false);
   const [activeTab, setActiveTab] = useState<'episodes' | 'related'>('episodes');
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [episodeSearch, setEpisodeSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [malData, setMalData] = useState<{ score: number | null; scored_by: number | null } | null>(null);
 
   // Fetch User Progress
@@ -97,9 +68,10 @@ export const AnimeDetail: React.FC = () => {
     fetchProgress();
   }, [id, user]);
 
-  // Fetch External Ratings (MAL) - Reused logic
+  // Fetch External Ratings (MAL)
   useEffect(() => {
     if (!anime) return;
+
     const loadMalInfo = async () => {
         let effectiveMalId = anime.malID;
         if (!effectiveMalId) {
@@ -113,19 +85,26 @@ export const AnimeDetail: React.FC = () => {
                 }
             } catch(e) {}
         }
+
         if (effectiveMalId) {
             try {
                 const statsRes = await fetch(`https://api.jikan.moe/v4/anime/${effectiveMalId}`);
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
-                    setMalData({ score: statsData.data?.score, scored_by: statsData.data?.scored_by });
+                    setMalData({
+                        score: statsData.data?.score,
+                        scored_by: statsData.data?.scored_by
+                    });
                 }
             } catch (e) {}
+        } else {
+            setMalData(null);
         }
     };
     loadMalInfo();
   }, [anime]);
   
+  // Actions
   const handleToggleList = async () => {
     if (!user) {
         navigate('/login');
@@ -159,295 +138,284 @@ export const AnimeDetail: React.FC = () => {
 
   const handleShare = async () => {
     try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied to clipboard!");
+        if (navigator.share) {
+            await navigator.share({
+                title: anime?.title,
+                text: `Watch ${anime?.title} on ROG Stream`,
+                url: window.location.href,
+            });
+        } else {
+            await navigator.clipboard.writeText(window.location.href);
+            alert("Link copied to clipboard!");
+        }
     } catch (e) {
-        console.error("Copy failed", e);
+        console.error("Share failed", e);
     }
   };
-  
+
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
   };
 
+  // Logic
   if (isLoading) return <DetailSkeleton />;
   if (isError || !anime) return <div className="min-h-screen bg-dark-950 flex items-center justify-center text-white">Anime Not Found</div>;
 
   const heroImage = anime.banner || anime.image;
-  const posterImage = anime.poster || anime.image;
   const episodes = anime.episodes || [];
   
   const currentEpNumber = userProgress?.currentEpisode || 0;
   let nextEp = episodes.find(e => e.number === currentEpNumber + 1);
-  if (!nextEp && episodes.length > 0) nextEp = episodes[0]; // Fallback to Ep 1
-  if (!nextEp && episodes.length > 0) nextEp = episodes[episodes.length - 1]; // Fallback to last if completed
+  if (!nextEp && episodes.length > 0) nextEp = episodes[0];
+  if (!nextEp && episodes.length > 0) nextEp = episodes[episodes.length - 1];
 
   const watchLink = nextEp ? `/watch/${encodeURIComponent(nextEp.id)}` : '#';
-  const buttonText = currentEpNumber > 0 && nextEp?.number !== 1 ? `Continue E${nextEp?.number}` : `Start Watching`;
-
-  const filteredEpisodes = episodes.filter(ep => 
-      ep.number.toString().includes(episodeSearch) || 
-      (ep.title && ep.title.toLowerCase().includes(episodeSearch.toLowerCase()))
-  );
+  const buttonText = currentEpNumber > 0 && nextEp?.number !== 1 ? `Resume: E${nextEp?.number}` : `Start Watching`;
 
   return (
-    <div className="min-h-screen bg-dark-950 text-white font-sans selection:bg-brand-500 selection:text-white overflow-x-hidden" ref={scrollRef}>
+    <motion.div 
+        ref={containerRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="min-h-screen bg-dark-950 text-white font-sans selection:bg-brand-500 selection:text-white pb-24 relative overflow-hidden"
+    >
       
-      {/* --- CINEMATIC HERO SECTION --- */}
-      <div className="relative w-full h-[65vh] md:h-[80vh] overflow-hidden border-b border-brand-900/10">
-          {/* Parallax Background */}
-          <motion.div style={{ y, opacity }} className="absolute inset-0">
-             <img 
+      {/* 1. Immersive Parallax Hero */}
+      <div className="fixed top-0 left-0 w-full h-[65vh] md:h-[80vh] z-0 overflow-hidden pointer-events-none">
+          <motion.div style={{ scale: heroScale, opacity: heroOpacity, filter: `blur(${heroBlur}px)` }} className="w-full h-full">
+            <img 
                 src={heroImage} 
                 alt={anime.title} 
                 className="w-full h-full object-cover" 
-             />
-             {/* Vignette & Gradients */}
-             <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/40 to-black/30" />
-             <div className="absolute inset-0 bg-gradient-to-r from-dark-950/90 via-transparent to-transparent" />
-             
-             {/* Noise Texture Overlay */}
-             <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dj5hhott5/image/upload/v1739502930/noise_tij0m3.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
-          </motion.div>
-
-          {/* Floating Content */}
-          <motion.div 
-             style={{ y: contentY }}
-             className="absolute inset-0 flex items-end pb-12 md:pb-24 z-10"
-          >
-              <div className="max-w-[1600px] w-full mx-auto px-4 md:px-12 flex flex-col md:flex-row gap-8 items-end">
-                   
-                   {/* Left: Poster (Desktop Only - Parallax Floating) */}
-                   <div className="hidden md:block w-[260px] flex-shrink-0 -mb-32 relative z-20 group perspective-1000">
-                        <div className="aspect-[2/3] rounded-lg overflow-hidden border-4 border-dark-950 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform transition-transform duration-500 group-hover:rotate-y-12 bg-dark-900">
-                             <img src={posterImage} className="w-full h-full object-cover" alt="" />
-                             {userProgress && (
-                                <div className="absolute top-2 left-2 bg-brand-400 text-black text-[10px] font-black px-2 py-1 uppercase tracking-widest rounded-sm shadow-lg">
-                                    {userProgress.status}
-                                </div>
-                             )}
-                        </div>
-                   </div>
-
-                   {/* Right: Info */}
-                   <div className="flex-1 space-y-6">
-                       <motion.div 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6 }}
-                          className="space-y-2"
-                       >
-                           {/* Badges */}
-                           <div className="flex flex-wrap gap-2 mb-3">
-                               {anime.type && <span className="px-2 py-0.5 bg-white/10 backdrop-blur-md border border-white/10 rounded text-[10px] font-bold uppercase tracking-widest text-zinc-300">{anime.type}</span>}
-                               {anime.status && <span className="px-2 py-0.5 bg-brand-400/10 backdrop-blur-md border border-brand-400/20 rounded text-[10px] font-bold uppercase tracking-widest text-brand-400">{anime.status}</span>}
-                               {(malData?.score || anime.malScore) && (
-                                   <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] font-bold text-yellow-500">
-                                       <Star className="w-3 h-3 fill-current" /> {malData?.score || anime.malScore}
-                                   </div>
-                               )}
-                           </div>
-                           
-                           <h1 className="text-4xl md:text-7xl font-black text-white font-display italic tracking-tight uppercase leading-[0.9] drop-shadow-2xl">
-                               {anime.title}
-                           </h1>
-                           {anime.japaneseTitle && <p className="text-zinc-400 text-sm md:text-lg font-medium">{anime.japaneseTitle}</p>}
-                       </motion.div>
-
-                       <motion.div 
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.1 }}
-                          className="flex flex-wrap gap-4"
-                       >
-                           <Link 
-                                to={watchLink}
-                                className="h-12 md:h-14 px-8 bg-brand-400 hover:bg-white text-black font-black text-sm md:text-base uppercase tracking-widest skew-x-[-12deg] flex items-center gap-3 transition-all shadow-[0_0_30px_rgba(255,0,51,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] hover:scale-105"
-                           >
-                                <Play className="w-5 h-5 fill-current skew-x-[12deg]" />
-                                <span className="skew-x-[12deg]">{buttonText}</span>
-                           </Link>
-                           
-                           <button 
-                                onClick={handleToggleList}
-                                className={`h-12 md:h-14 w-14 md:w-16 border-2 flex items-center justify-center skew-x-[-12deg] transition-all hover:scale-105 ${userProgress ? 'bg-zinc-800 border-zinc-700 text-brand-400' : 'bg-transparent border-white/30 text-white hover:bg-white hover:text-black hover:border-white'}`}
-                           >
-                                {isSaving ? <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin skew-x-[12deg]"/> : userProgress ? <Check className="w-6 h-6 skew-x-[12deg]" /> : <Plus className="w-6 h-6 skew-x-[12deg]" />}
-                           </button>
-
-                           <button 
-                                onClick={handleShare}
-                                className="h-12 md:h-14 w-14 md:w-16 border-2 border-white/30 bg-transparent hover:bg-white hover:text-black hover:border-white text-white flex items-center justify-center skew-x-[-12deg] transition-all hover:scale-105"
-                           >
-                                <Share2 className="w-6 h-6 skew-x-[12deg]" />
-                           </button>
-                       </motion.div>
-                   </div>
-              </div>
+            />
+             <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/60 to-transparent" />
+             <div className="absolute inset-0 bg-gradient-to-r from-dark-950/80 via-transparent to-transparent" />
           </motion.div>
       </div>
 
-      {/* --- CONTENT SECTION --- */}
-      <div className="max-w-[1600px] mx-auto px-4 md:px-12 py-12 md:py-20 relative z-20">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-              
-              {/* Left Column (Meta & Stats) */}
-              <div className="hidden lg:block w-[300px] flex-shrink-0 space-y-8 pt-20">
-                   <div className="bg-dark-900/50 border border-white/5 p-6 rounded-lg backdrop-blur-sm space-y-6">
-                       <InfoChip label="Format" value={anime.type} icon={Monitor} />
-                       <InfoChip label="Episodes" value={anime.totalEpisodes || anime.episodes?.length} icon={Layers} />
-                       <InfoChip label="Status" value={anime.status} icon={Check} />
-                       <InfoChip label="Aired" value={anime.season} icon={Calendar} />
-                       <div className="pt-4 border-t border-white/5">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Genres</span>
-                            <div className="flex flex-wrap gap-2">
-                                {anime.genres?.map(g => (
-                                    <Link key={g} to={`/animes/${g.toLowerCase()}`} className="text-[11px] font-bold text-zinc-300 hover:text-brand-400 transition-colors bg-white/5 px-2 py-1 rounded hover:bg-white/10">
-                                        {g}
-                                    </Link>
-                                ))}
-                            </div>
+      {/* Back Button (Fixed) */}
+      <Link to="/" className="fixed top-6 left-4 md:left-8 z-50 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/20 backdrop-blur-md border border-white/10 rounded-full hover:bg-white/10 transition-all group">
+         <ArrowLeft className="w-5 h-5 text-white group-hover:-translate-x-1 transition-transform" />
+      </Link>
+
+      {/* 2. Content Container (Scrolls over fixed hero) */}
+      <motion.div 
+        style={{ y: contentY }}
+        className="relative z-10 pt-[35vh] md:pt-[45vh] max-w-[1400px] mx-auto px-4 md:px-8"
+      >
+          <div className="flex flex-col md:flex-row items-end gap-8 md:gap-12">
+               
+               {/* Poster Card (Floating) */}
+               <motion.div 
+                 initial={{ y: 50, opacity: 0 }}
+                 animate={{ y: 0, opacity: 1 }}
+                 transition={{ delay: 0.2, duration: 0.8 }}
+                 className="hidden md:block w-[240px] aspect-[2/3] rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 bg-dark-800 flex-shrink-0 relative group"
+               >
+                   <img src={anime.image} alt={anime.title} className="w-full h-full object-cover" />
+               </motion.div>
+
+               {/* Header Info */}
+               <div className="flex-1 w-full text-shadow-lg">
+                   <motion.div
+                     initial={{ y: 30, opacity: 0 }}
+                     animate={{ y: 0, opacity: 1 }}
+                     transition={{ delay: 0.3, duration: 0.8 }}
+                   >
+                       {/* Tags */}
+                       <div className="flex flex-wrap items-center gap-2 mb-3">
+                           {anime.type && <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider">{anime.type}</span>}
+                           {anime.status && <span className="px-2 py-0.5 rounded-full bg-brand-400/20 backdrop-blur-md border border-brand-400/30 text-brand-400 text-[10px] font-bold uppercase tracking-wider">{anime.status}</span>}
+                           <div className="flex items-center gap-1 text-[10px] font-bold bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
+                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                <span>{malData?.score || anime.malScore || "N/A"}</span>
+                           </div>
                        </div>
-                   </div>
-              </div>
 
-              {/* Right Column (Tabs & Content) */}
-              <div className="flex-1 min-w-0">
-                  
+                       <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase font-display italic tracking-tighter leading-[0.9] mb-4 text-white">
+                           {anime.title}
+                       </h1>
+
+                       {/* Action Row */}
+                       <div className="flex flex-wrap items-center gap-4 mb-8">
+                            <Link 
+                                to={watchLink}
+                                className="h-12 md:h-14 px-8 bg-brand-400 hover:bg-white text-black font-black uppercase tracking-widest text-sm md:text-base rounded-full flex items-center gap-3 transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(255,0,51,0.4)]"
+                            >
+                                <Play className="w-5 h-5 md:w-6 md:h-6 fill-current" />
+                                {buttonText}
+                            </Link>
+                            
+                            <button 
+                                onClick={handleToggleList}
+                                className={`h-12 md:h-14 w-12 md:w-14 rounded-full flex items-center justify-center border transition-all ${userProgress ? 'bg-green-500 border-green-500 text-black' : 'bg-white/10 border-white/10 hover:bg-white/20 text-white backdrop-blur-md'}`}
+                            >
+                                {userProgress ? <Check className="w-5 h-5 md:w-6 md:h-6" /> : <Plus className="w-5 h-5 md:w-6 md:h-6" />}
+                            </button>
+
+                            <button 
+                                onClick={handleShare}
+                                className="h-12 md:h-14 w-12 md:w-14 rounded-full flex items-center justify-center bg-white/10 border border-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all"
+                            >
+                                <Share2 className="w-5 h-5 md:w-6 md:h-6" />
+                            </button>
+                       </div>
+                   </motion.div>
+               </div>
+          </div>
+
+          {/* 3. Details & Episodes Section */}
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+              
+              {/* Left Column: Details */}
+              <motion.div 
+                 className="lg:col-span-4 space-y-8"
+                 initial={{ opacity: 0, y: 30 }}
+                 whileInView={{ opacity: 1, y: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ duration: 0.6 }}
+              >
                   {/* Synopsis */}
-                  <div className="mb-12">
-                      <h3 className="text-xs font-bold text-brand-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                          <span className="w-8 h-[1px] bg-brand-400"></span> Synopsis
-                      </h3>
-                      <p className="text-zinc-300 leading-relaxed text-sm md:text-base font-light max-w-4xl">
+                  <div className="bg-dark-900/50 backdrop-blur-md border border-white/5 p-6 rounded-2xl">
+                      <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">Synopsis</h3>
+                      <div className={`relative text-sm text-zinc-300 leading-relaxed ${showFullDesc ? '' : 'line-clamp-4'}`}>
                           {anime.description}
-                      </p>
+                      </div>
+                      <button 
+                        onClick={() => setShowFullDesc(!showFullDesc)}
+                        className="mt-2 text-xs font-bold text-brand-400 uppercase tracking-wider flex items-center gap-1 hover:text-white transition-colors"
+                      >
+                          {showFullDesc ? 'Less' : 'More'} <ChevronDown className={`w-3 h-3 transition-transform ${showFullDesc ? 'rotate-180' : ''}`} />
+                      </button>
                   </div>
 
-                  {/* Tabs */}
-                  <div className="flex items-center gap-4 border-b border-white/5 mb-8">
-                      <TabButton active={activeTab === 'episodes'} onClick={() => setActiveTab('episodes')} label="Episodes" icon={List} />
-                      <TabButton active={activeTab === 'related'} onClick={() => setActiveTab('related')} label="Related" icon={LayoutGrid} />
+                  {/* Info Grid */}
+                  <div className="bg-dark-900/50 backdrop-blur-md border border-white/5 p-6 rounded-2xl grid grid-cols-2 gap-6">
+                      <div>
+                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                              <Calendar className="w-3 h-3" /> Aired
+                          </div>
+                          <div className="text-sm font-medium text-white">{anime.season || 'Unknown'}</div>
+                      </div>
+                      <div>
+                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                              <Layers className="w-3 h-3" /> Episodes
+                          </div>
+                          <div className="text-sm font-medium text-white">{anime.episodes?.length || '?'}</div>
+                      </div>
+                      <div className="col-span-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                              Genres
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                              {anime.genres?.map(g => (
+                                  <Link key={g} to={`/animes/${g.toLowerCase()}`} className="px-3 py-1 bg-white/5 hover:bg-brand-400 hover:text-black transition-colors rounded-full text-xs border border-white/5">
+                                      {g}
+                                  </Link>
+                              ))}
+                          </div>
+                      </div>
                   </div>
-                  
+              </motion.div>
+
+              {/* Right Column: Episodes & Related */}
+              <div className="lg:col-span-8">
+                  {/* iOS Style Segmented Control */}
+                  <div className="flex p-1 bg-white/5 rounded-full backdrop-blur-sm border border-white/5 mb-8 w-fit">
+                      <button 
+                        onClick={() => setActiveTab('episodes')}
+                        className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'episodes' ? 'bg-brand-400 text-black shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+                      >
+                          Episodes
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab('related')}
+                        className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'related' ? 'bg-brand-400 text-black shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+                      >
+                          Related
+                      </button>
+                  </div>
+
                   <AnimatePresence mode="wait">
                       {activeTab === 'episodes' ? (
                           <motion.div
-                             key="episodes"
-                             initial={{ opacity: 0, y: 10 }}
-                             animate={{ opacity: 1, y: 0 }}
-                             exit={{ opacity: 0, y: -10 }}
-                             transition={{ duration: 0.3 }}
+                            key="episodes"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.4 }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-3"
                           >
-                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                                   <div className="text-sm font-bold text-zinc-400">
-                                       <span className="text-white">{filteredEpisodes.length}</span> Episodes
-                                   </div>
-                                   
-                                   <div className="flex gap-2">
-                                       <div className="relative group">
-                                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-brand-400 transition-colors" />
-                                           <input 
-                                                type="text" 
-                                                placeholder="Search number..." 
-                                                value={episodeSearch}
-                                                onChange={(e) => setEpisodeSearch(e.target.value)}
-                                                className="bg-dark-900 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm focus:border-brand-400 outline-none w-[180px] focus:w-[220px] transition-all"
-                                           />
-                                       </div>
-                                       <div className="flex bg-dark-900 rounded-full border border-white/10 p-1">
-                                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-full transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-zinc-500'}`}><List className="w-4 h-4"/></button>
-                                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-full transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-zinc-500'}`}><LayoutGrid className="w-4 h-4"/></button>
-                                       </div>
-                                   </div>
-                               </div>
+                              {episodes.map((ep, idx) => {
+                                  const isNext = nextEp?.id === ep.id;
+                                  return (
+                                    <Link 
+                                        key={ep.id}
+                                        to={`/watch/${encodeURIComponent(ep.id)}`}
+                                        className={`group relative flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 overflow-hidden ${isNext ? 'bg-brand-400/10 border-brand-400/30 shadow-[0_0_20px_rgba(255,0,51,0.1)]' : 'bg-dark-900/40 border-white/5 hover:bg-dark-800 hover:border-white/10'}`}
+                                    >
+                                        {/* Thumbnail (Simulated) */}
+                                        <div className="w-24 md:w-32 aspect-video bg-black/50 rounded-lg overflow-hidden relative flex-shrink-0">
+                                            <img src={anime.image} className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity blur-[1px] group-hover:blur-0" alt="" />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm ${isNext ? 'bg-brand-400 text-black' : 'bg-white/10 text-white group-hover:bg-white group-hover:text-black'} transition-colors`}>
+                                                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                                                </div>
+                                            </div>
+                                        </div>
 
-                               {/* Episodes List/Grid */}
-                               {viewMode === 'list' ? (
-                                   <div className="space-y-2">
-                                       {filteredEpisodes.map((ep, i) => (
-                                           <motion.div 
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: i * 0.03 }}
-                                                key={ep.id}
-                                           >
-                                               <Link 
-                                                    to={`/watch/${encodeURIComponent(ep.id)}`}
-                                                    className="group flex items-center gap-4 p-3 md:p-4 rounded-lg bg-white/5 border border-white/5 hover:bg-brand-400/10 hover:border-brand-400/30 transition-all duration-300"
-                                               >
-                                                    <div className="relative w-24 md:w-32 aspect-video rounded overflow-hidden bg-black flex-shrink-0">
-                                                        <img src={anime.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-brand-400 group-hover:scale-110 transition-all">
-                                                                <Play className="w-3 h-3 fill-white text-white group-hover:fill-black group-hover:text-black ml-0.5" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <span className="text-xs font-black text-zinc-500 uppercase tracking-wider group-hover:text-brand-400">Episode {ep.number}</span>
-                                                            {ep.isFiller && <span className="text-[9px] font-bold bg-red-500/20 text-red-500 px-1.5 rounded border border-red-500/20">FILLER</span>}
-                                                        </div>
-                                                        <h4 className="font-bold text-white text-sm md:text-lg truncate pr-4">{ep.title || `Episode ${ep.number}`}</h4>
-                                                    </div>
-
-                                                    <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0 duration-300">
-                                                         <ArrowRight className="w-5 h-5 text-brand-400" />
-                                                    </div>
-                                               </Link>
-                                           </motion.div>
-                                       ))}
-                                   </div>
-                               ) : (
-                                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                       {filteredEpisodes.map((ep, i) => (
-                                           <motion.div
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: i * 0.02 }}
-                                                key={ep.id}
-                                           >
-                                               <Link 
-                                                    to={`/watch/${encodeURIComponent(ep.id)}`}
-                                                    className="block group bg-white/5 border border-white/5 hover:bg-brand-400 hover:border-brand-400 rounded p-4 text-center transition-all duration-300"
-                                               >
-                                                    <div className="text-xl font-black text-zinc-500 group-hover:text-black mb-1">{ep.number}</div>
-                                                    <div className="text-[10px] text-zinc-600 group-hover:text-black/70 font-bold uppercase tracking-widest">Episode</div>
-                                               </Link>
-                                           </motion.div>
-                                       ))}
-                                   </div>
-                               )}
+                                        <div className="flex-1 min-w-0 pr-2">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest ${isNext ? 'text-brand-400' : 'text-zinc-500'}`}>Episode {ep.number}</span>
+                                                {ep.isFiller && <span className="text-[9px] px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded border border-red-500/20 uppercase font-bold">Filler</span>}
+                                            </div>
+                                            <h4 className="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">
+                                                {ep.title || `Episode ${ep.number}`}
+                                            </h4>
+                                        </div>
+                                    </Link>
+                                  );
+                              })}
                           </motion.div>
                       ) : (
                           <motion.div
                              key="related"
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             exit={{ opacity: 0 }}
+                             initial={{ opacity: 0, x: 20 }}
+                             animate={{ opacity: 1, x: 0 }}
+                             exit={{ opacity: 0, x: -20 }}
+                             transition={{ duration: 0.4 }}
                              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
                           >
-                              {[...(anime.relatedAnime || []), ...(anime.recommendations || [])].map((rel, i) => (
-                                  <motion.div 
-                                    key={rel.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.05 }}
-                                  >
-                                      <AnimeCard anime={rel} layout="grid" />
-                                  </motion.div>
+                             {[...(anime.relatedAnime || []), ...(anime.recommendations || [])].map(rel => (
+                                  <AnimeCard key={rel.id} anime={rel} layout="grid" />
                               ))}
                           </motion.div>
                       )}
                   </AnimatePresence>
-                  
               </div>
           </div>
-      </div>
-    </div>
+
+      </motion.div>
+
+      {/* Sticky Bottom Bar for Mobile Only */}
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="fixed bottom-0 left-0 right-0 bg-dark-950/80 backdrop-blur-xl border-t border-white/10 p-4 z-50 md:hidden pb-[env(safe-area-inset-bottom)]"
+      >
+          <Link 
+            to={watchLink}
+            className="w-full h-12 bg-brand-400 text-black font-black uppercase tracking-widest rounded-full flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,0,51,0.3)]"
+          >
+              <Play className="w-5 h-5 fill-current" /> {buttonText}
+          </Link>
+      </motion.div>
+
+    </motion.div>
   );
 };

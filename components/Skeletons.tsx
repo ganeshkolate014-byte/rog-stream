@@ -121,66 +121,47 @@ export const CategorySkeleton: React.FC = () => (
 );
 
 export const DetailSkeleton: React.FC = () => (
-  <div className="min-h-screen bg-dark-950">
-      {/* Hero Image Skeleton */}
-      <div className="w-full h-[60vh] md:h-[75vh] bg-dark-900 relative overflow-hidden">
+  <div className="min-h-screen bg-dark-950 pb-24 relative overflow-hidden">
+      {/* Immersive Hero Skeleton */}
+      <div className="w-full h-[60vh] md:h-[80vh] bg-dark-900 relative">
            <div className="absolute inset-0 skeleton-shimmer opacity-20" />
-           <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
+           <div className="absolute inset-0 bg-gradient-to-t from-dark-950 to-transparent" />
       </div>
       
-      {/* Content Container */}
-      <div className="max-w-[1600px] mx-auto px-4 md:px-8 -mt-32 md:-mt-48 relative z-10">
-          <div className="flex flex-col md:flex-row gap-8">
-              
-              {/* Poster Card */}
-              <div className="hidden md:block w-[240px] flex-shrink-0">
-                  <div className="aspect-[2/3] rounded-lg bg-dark-800 border border-white/10 overflow-hidden relative shadow-2xl">
-                       <div className="absolute inset-0 skeleton-shimmer opacity-30" />
-                  </div>
-              </div>
+      <div className="relative z-10 -mt-[40vh] max-w-[1400px] mx-auto px-4 md:px-8">
+          <div className="flex flex-col md:flex-row items-end gap-8 md:gap-12">
+               {/* Poster Skeleton */}
+               <div className="hidden md:block w-[240px] aspect-[2/3] bg-dark-800 rounded-lg overflow-hidden border border-white/5 relative shadow-2xl">
+                    <div className="absolute inset-0 skeleton-shimmer opacity-30" />
+               </div>
 
-              {/* Info Area */}
-              <div className="flex-1 space-y-6 pt-4">
-                   {/* Title */}
-                   <div className="space-y-2">
-                       <Skeleton className="h-8 md:h-16 w-3/4 rounded-sm" />
-                       <Skeleton className="h-4 w-1/3 opacity-50" />
-                   </div>
-
-                   {/* Stats */}
-                   <div className="flex gap-4">
-                       <Skeleton className="h-10 w-24 rounded-full" />
-                       <Skeleton className="h-10 w-24 rounded-full" />
-                   </div>
-                   
-                   {/* Description */}
-                   <div className="space-y-2 max-w-2xl">
-                       <Skeleton className="h-4 w-full opacity-60" />
-                       <Skeleton className="h-4 w-full opacity-60" />
-                       <Skeleton className="h-4 w-2/3 opacity-60" />
-                   </div>
-
-                   {/* Actions */}
-                   <div className="flex gap-4 pt-4">
-                       <Skeleton className="h-12 w-40 skew-x-[-12deg]" />
-                       <Skeleton className="h-12 w-12 skew-x-[-12deg]" />
-                   </div>
-              </div>
+               {/* Info Skeleton */}
+               <div className="flex-1 w-full pb-8">
+                    <div className="flex gap-2 mb-4">
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-10 md:h-16 w-3/4 bg-zinc-800 rounded-sm mb-6" />
+                    <div className="flex gap-4">
+                        <Skeleton className="h-12 w-40 rounded-full" />
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                    </div>
+               </div>
           </div>
           
-          {/* Episode Grid Skeleton */}
-          <div className="mt-16 space-y-4">
-               <Skeleton className="h-8 w-48 mb-6" />
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                   {[...Array(6)].map((_, i) => (
-                       <div key={i} className="h-24 bg-dark-900 border border-white/5 rounded flex items-center p-3 gap-4">
-                           <Skeleton className="w-24 h-full rounded-sm" />
-                           <div className="flex-1 space-y-2">
-                               <Skeleton className="h-4 w-3/4" />
-                               <Skeleton className="h-3 w-1/2 opacity-50" />
-                           </div>
-                       </div>
-                   ))}
+          {/* Content Grid Skeleton */}
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+               <div className="lg:col-span-4 space-y-4">
+                    <Skeleton className="h-40 w-full rounded-2xl" />
+                    <Skeleton className="h-32 w-full rounded-2xl" />
+               </div>
+               <div className="lg:col-span-8">
+                    <Skeleton className="h-10 w-48 rounded-full mb-8" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[...Array(6)].map((_, i) => (
+                            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                        ))}
+                    </div>
                </div>
           </div>
       </div>
