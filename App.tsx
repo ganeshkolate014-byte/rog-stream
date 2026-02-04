@@ -64,11 +64,8 @@ const App: React.FC = () => {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
       smoothWheel: true,
-      smoothTouch: false, // Disable smoothTouch on mobile to rely on native momentum for better feel
-      touchMultiplier: 2,
+      smoothTouch: true,
     });
 
     function raf(time: number) {
