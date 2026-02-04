@@ -122,37 +122,48 @@ export const CategorySkeleton: React.FC = () => (
 
 export const DetailSkeleton: React.FC = () => (
   <div className="min-h-screen bg-black pb-24">
-      {/* Hero Image Skeleton - Full width/height */}
-      <div className="w-full h-[50vh] md:h-[70vh] bg-zinc-900 relative overflow-hidden">
+      {/* 
+        Hero Image Skeleton - Fixed Full Screen visual 
+      */}
+      <div className="fixed top-0 left-0 w-full h-[70vh] z-0 bg-zinc-900">
            <div className="absolute inset-0 skeleton-shimmer opacity-20" />
+           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
       </div>
       
-      {/* Centered Content Skeleton */}
-      <div className="max-w-4xl mx-auto px-4 -mt-20 relative z-10 flex flex-col items-center gap-6">
-           {/* Title */}
-           <Skeleton className="h-8 md:h-16 w-3/4 bg-zinc-800 rounded-sm" />
-           {/* Meta */}
-           <Skeleton className="h-4 w-1/2 bg-zinc-800 rounded-sm" />
-           {/* Buttons */}
-           <div className="flex gap-8 mt-2">
-               <Skeleton className="h-12 w-12 rounded-full bg-zinc-800" />
-               <Skeleton className="h-12 w-12 rounded-full bg-zinc-800" />
-           </div>
-           {/* Desc */}
-           <div className="w-full max-w-2xl h-24 bg-zinc-900/50 rounded mt-4" />
-      </div>
-      
-      {/* List Skeleton */}
-      <div className="max-w-4xl mx-auto px-4 mt-12 space-y-3">
-           {[...Array(5)].map((_, i) => (
-               <div key={i} className="flex gap-4 p-3 border border-white/5 rounded-lg">
-                   <Skeleton className="w-32 aspect-video rounded-sm" />
-                   <div className="flex-1 space-y-2 py-1">
-                       <Skeleton className="h-4 w-3/4" />
-                       <Skeleton className="h-3 w-full opacity-50" />
-                   </div>
-               </div>
-           ))}
+      {/* 
+        Scroll Content Simulation 
+      */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+         <div className="h-[50vh] w-full flex-shrink-0" />
+         
+         <div className="flex-1 bg-black pt-10">
+             <div className="max-w-4xl mx-auto px-4 flex flex-col items-center gap-6">
+                 {/* Title */}
+                 <Skeleton className="h-8 md:h-16 w-3/4 bg-zinc-800 rounded-sm" />
+                 {/* Meta */}
+                 <Skeleton className="h-4 w-1/2 bg-zinc-800 rounded-sm" />
+                 {/* Buttons */}
+                 <div className="flex gap-8 mt-2">
+                     <Skeleton className="h-12 w-12 rounded-full bg-zinc-800" />
+                     <Skeleton className="h-12 w-12 rounded-full bg-zinc-800" />
+                 </div>
+                 {/* Desc */}
+                 <div className="w-full max-w-2xl h-24 bg-zinc-900/50 rounded mt-4" />
+             </div>
+             
+             {/* List Skeleton */}
+             <div className="max-w-4xl mx-auto px-4 mt-12 space-y-3">
+                 {[...Array(5)].map((_, i) => (
+                     <div key={i} className="flex gap-4 p-3 border border-white/5 rounded-lg">
+                         <Skeleton className="w-32 aspect-video rounded-sm" />
+                         <div className="flex-1 space-y-2 py-1">
+                             <Skeleton className="h-4 w-3/4" />
+                             <Skeleton className="h-3 w-full opacity-50" />
+                         </div>
+                     </div>
+                 ))}
+             </div>
+         </div>
       </div>
   </div>
 );

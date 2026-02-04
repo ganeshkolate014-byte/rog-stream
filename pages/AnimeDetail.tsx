@@ -16,7 +16,6 @@ import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress, addToWatchlist, removeUserProgress } from '../services/firebase';
-import { motion } from 'framer-motion';
 
 export const AnimeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -159,186 +158,213 @@ export const AnimeDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white pb-24 font-sans selection:bg-brand-500 selection:text-white">
       
-      {/* 2. Hero Section - Increased height and adjusted gradient for "Full" look */}
-      <div className="relative w-full h-[50vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
-          {/* Background Image */}
-          <div className="absolute inset-0">
-             <img 
-                src={heroImage} 
-                alt={anime.title} 
-                className="w-full h-full object-cover object-top" 
-             />
-          </div>
+      {/* 
+        1. Fixed Background Layer (The Poster) 
+        This div stays fixed while content scrolls over it.
+      */}
+      <div className="fixed top-0 left-0 w-full h-[70vh] z-0">
+          {/* Base darkening */}
+          <div className="absolute inset-0 bg-black" /> 
           
-          {/* Soft Gradient Overlay - Adjusted to be minimal at top */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black" />
+          <img 
+            src={heroImage} 
+            alt={anime.title} 
+            className="w-full h-full object-cover opacity-90" 
+          />
+          
+          {/* Gradient Overlay: 
+              - Top gradient for Navbar visibility
+              - Bottom gradient to blend into the scrolling content
+          */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-20 md:-mt-32 relative z-10">
+      {/* 
+        2. Main Scrollable Content Wrapper 
+        Relative positioning places it *above* the fixed background.
+      */}
+      <div className="relative z-10 w-full min-h-screen flex flex-col">
           
-          {/* 3. Centered Info Header */}
-          <div className="flex flex-col items-center text-center">
+          {/* Transparent Spacer - Allows seeing the fixed background initially */}
+          <div className="h-[45vh] md:h-[55vh] w-full flex-shrink-0" />
+
+          {/* 
+            Content Body 
+            Starts with a gradient to smooth the transition from the image,
+            then becomes solid black for readability of the list.
+          */}
+          <div className="flex-1 bg-gradient-to-b from-transparent via-black/90 to-black pt-12">
               
-              {/* Title - No Animation */}
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase font-display tracking-tight leading-none mb-2 text-balance drop-shadow-xl">
-                  {anime.title}
-              </h1>
-              
-              {/* Subtitle / JP Title */}
-              {anime.japaneseTitle && (
-                  <p className="text-zinc-300 text-xs md:text-sm font-medium mb-4 drop-shadow-md">{anime.japaneseTitle}</p>
-              )}
+               <div className="max-w-7xl mx-auto px-4 flex flex-col items-center text-center pb-8">
+                   
+                   {/* Title - Static, no animation */}
+                   <h1 className="text-3xl md:text-5xl lg:text-7xl font-black uppercase font-display tracking-tight leading-none mb-2 text-balance drop-shadow-2xl">
+                      {anime.title}
+                   </h1>
+                   
+                   {/* Subtitle / JP Title */}
+                   {anime.japaneseTitle && (
+                       <p className="text-zinc-300 text-xs md:text-sm font-medium mb-4 drop-shadow-md">{anime.japaneseTitle}</p>
+                   )}
 
-              {/* Metadata Line */}
-              <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] md:text-xs font-bold text-zinc-300 mb-4 uppercase tracking-wider">
-                  {/* Dub/Sub Badges */}
-                  <div className="flex items-center gap-1">
-                      {anime.hasDub && <span className="bg-white text-black px-1.5 py-0.5 rounded-[2px]">DUB</span>}
-                      {anime.hasSub && <span className="bg-zinc-800 text-white border border-white/20 px-1.5 py-0.5 rounded-[2px] ml-0.5">SUB</span>}
-                  </div>
-                  <span className="opacity-50">•</span>
-                  {/* Genres */}
-                  <span>
-                      {anime.genres?.slice(0, 3).join(', ')}
-                  </span>
-              </div>
+                   {/* Metadata Line */}
+                   <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] md:text-xs font-bold text-zinc-300 mb-6 uppercase tracking-wider drop-shadow-md">
+                       {/* Dub/Sub Badges */}
+                       <div className="flex items-center gap-1">
+                           {anime.hasDub && <span className="bg-white text-black px-1.5 py-0.5 rounded-[2px]">DUB</span>}
+                           {anime.hasSub && <span className="bg-zinc-800 text-white border border-white/20 px-1.5 py-0.5 rounded-[2px] ml-0.5">SUB</span>}
+                       </div>
+                       <span className="opacity-50">•</span>
+                       {/* Genres */}
+                       <span>
+                           {anime.genres?.slice(0, 3).join(', ')}
+                       </span>
+                   </div>
 
-              {/* Rating Row */}
-              <div className="flex items-center gap-2 mb-8 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-                  <div className="flex text-brand-400">
-                      <Star className="w-4 h-4 fill-current" />
-                  </div>
-                  <span className="text-sm font-black text-white">
-                      {malData?.score || anime.malScore || "4.8"}
-                  </span>
-                  <span className="text-xs text-zinc-400 font-bold">
-                      ({malData?.scored_by ? formatNumber(malData.scored_by) : "12k"})
-                  </span>
-              </div>
+                   {/* Rating & Stats */}
+                   <div className="flex items-center gap-2 mb-8 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
+                       <div className="flex text-brand-400">
+                           <Star className="w-4 h-4 fill-current" />
+                       </div>
+                       <span className="text-sm font-black text-white">
+                           {malData?.score || anime.malScore || "4.8"}
+                       </span>
+                       <span className="text-xs text-zinc-400 font-bold border-l border-white/10 pl-2 ml-1">
+                           {malData?.scored_by ? formatNumber(malData.scored_by) : "12k"} Votes
+                       </span>
+                   </div>
 
-              {/* Action Buttons Row */}
-              <div className="flex items-center gap-12 md:gap-20 mb-8">
-                  <button 
-                    onClick={handleToggleList}
-                    className="flex flex-col items-center gap-2 group"
-                  >
-                      <div className={`p-3 rounded-full border-2 transition-all ${userProgress ? 'bg-brand-400 border-brand-400' : 'bg-black/50 border-white/30 group-hover:border-brand-400'}`}>
-                        {userProgress ? (
-                            <Check className="w-5 h-5 text-black" />
-                        ) : (
-                            <Plus className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
-                        )}
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${userProgress ? 'text-brand-400' : 'text-zinc-400 group-hover:text-white'}`}>
-                          {userProgress ? 'Saved' : 'My List'}
-                      </span>
-                  </button>
-                  
-                  <button onClick={handleShare} className="flex flex-col items-center gap-2 group">
-                      <div className="p-3 rounded-full bg-black/50 border-2 border-white/30 group-hover:border-brand-400 transition-all">
-                        <Share2 className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
-                      </div>
-                      <span className="text-[10px] font-bold text-zinc-400 group-hover:text-white uppercase tracking-wider">Share</span>
-                  </button>
-              </div>
+                   {/* Action Buttons Row */}
+                   <div className="flex items-center gap-12 md:gap-20 mb-8">
+                       <button 
+                         onClick={handleToggleList}
+                         className="flex flex-col items-center gap-2 group"
+                       >
+                           <div className={`p-3 rounded-full border-2 transition-all shadow-lg ${userProgress ? 'bg-brand-400 border-brand-400' : 'bg-black/60 border-white/30 group-hover:border-brand-400 backdrop-blur-sm'}`}>
+                             {userProgress ? (
+                                 <Check className="w-5 h-5 text-black" />
+                             ) : (
+                                 <Plus className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
+                             )}
+                           </div>
+                           <span className={`text-[10px] font-bold uppercase tracking-wider ${userProgress ? 'text-brand-400' : 'text-zinc-300 group-hover:text-white'}`}>
+                               {userProgress ? 'Saved' : 'My List'}
+                           </span>
+                       </button>
+                       
+                       <button onClick={handleShare} className="flex flex-col items-center gap-2 group">
+                           <div className="p-3 rounded-full bg-black/60 border-2 border-white/30 group-hover:border-brand-400 transition-all backdrop-blur-sm shadow-lg">
+                             <Share2 className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
+                           </div>
+                           <span className="text-[10px] font-bold text-zinc-300 group-hover:text-white uppercase tracking-wider">Share</span>
+                       </button>
+                   </div>
 
-              {/* Description (Collapsible) - No Animation */}
-              <div className="w-full max-w-2xl mb-10">
-                  <div 
-                    className={`overflow-hidden relative text-xs md:text-sm text-zinc-300 leading-relaxed text-center transition-[height] duration-300 ease-in-out ${showFullDesc ? 'h-auto' : 'h-[60px]'}`}
-                  >
-                      {anime.description}
-                      {!showFullDesc && (
-                          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black to-transparent" />
-                      )}
-                  </div>
-                  <button 
-                    onClick={() => setShowFullDesc(!showFullDesc)}
-                    className="flex items-center gap-1 mx-auto text-[10px] font-bold text-zinc-500 uppercase mt-2 hover:text-white transition-colors"
-                  >
-                      {showFullDesc ? 'Show Less' : 'Show More'} <ChevronDown className={`w-3 h-3 transition-transform ${showFullDesc ? 'rotate-180' : ''}`} />
-                  </button>
-              </div>
+                   {/* Description (Collapsible) - No Animation */}
+                   <div className="w-full max-w-2xl mb-4">
+                       <div 
+                         className={`overflow-hidden relative text-xs md:text-sm text-zinc-300 leading-relaxed text-center transition-[height] duration-300 ease-in-out ${showFullDesc ? 'h-auto' : 'h-[60px]'}`}
+                       >
+                           {anime.description}
+                           {!showFullDesc && (
+                               <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent" />
+                           )}
+                       </div>
+                       <button 
+                         onClick={() => setShowFullDesc(!showFullDesc)}
+                         className="flex items-center gap-1 mx-auto text-[10px] font-bold text-zinc-500 uppercase mt-2 hover:text-white transition-colors"
+                       >
+                           {showFullDesc ? 'Show Less' : 'Show More'} <ChevronDown className={`w-3 h-3 transition-transform ${showFullDesc ? 'rotate-180' : ''}`} />
+                       </button>
+                   </div>
+               </div>
 
-          </div>
+               {/* Solid Background Section for Lists */}
+               <div className="bg-black w-full min-h-[500px]">
+                   
+                   {/* Tabs */}
+                   <div className="sticky top-14 md:top-20 z-40 bg-black/95 backdrop-blur-xl border-b border-white/10 mb-6 shadow-2xl">
+                       <div className="flex items-center justify-center gap-12 max-w-7xl mx-auto px-4">
+                           <button 
+                             onClick={() => setActiveTab('episodes')}
+                             className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'episodes' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
+                           >
+                               Episodes
+                               {activeTab === 'episodes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
+                           </button>
+                           <button 
+                             onClick={() => setActiveTab('related')}
+                             className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'related' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
+                           >
+                               Related
+                               {activeTab === 'related' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
+                           </button>
+                       </div>
+                   </div>
 
-          {/* 4. Tabs Section */}
-          <div className="border-b border-white/10 mb-6 sticky top-14 md:top-20 bg-black z-40">
-              <div className="flex items-center justify-center gap-12">
-                  <button 
-                    onClick={() => setActiveTab('episodes')}
-                    className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'episodes' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
-                  >
-                      Episodes
-                      {activeTab === 'episodes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('related')}
-                    className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'related' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
-                  >
-                      Related
-                      {activeTab === 'related' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
-                  </button>
-              </div>
-          </div>
+                   {/* Tab Content */}
+                   <div className="max-w-7xl mx-auto px-4 min-h-[400px]">
+                       {activeTab === 'episodes' ? (
+                           <div className="space-y-4">
+                               {/* List Header */}
+                               <div className="flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-wider px-2 mb-2">
+                                   <span>{episodes.length} Episodes Available</span>
+                                   <span className="text-zinc-600">Sorted by Number</span>
+                               </div>
 
-          {/* 5. Tab Content */}
-          <div className="min-h-[400px]">
-              {activeTab === 'episodes' ? (
-                  <div className="space-y-4">
-                      {/* Season Selector */}
-                      <div className="flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-wider px-2 mb-2">
-                          <span>{episodes.length} Episodes Available</span>
-                      </div>
-
-                      {/* List */}
-                      <div className="flex flex-col gap-3">
-                          {episodes.map(ep => {
-                              const isNext = nextEp?.id === ep.id;
-                              return (
-                                  <Link 
-                                    key={ep.id} 
-                                    to={`/watch/${encodeURIComponent(ep.id)}`}
-                                    className={`flex gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors group ${isNext ? 'bg-brand-400/10 border border-brand-400/20' : 'bg-zinc-900/30 border border-transparent'}`}
-                                  >
-                                      {/* Thumbnail Placeholder */}
-                                      <div className="w-32 md:w-40 aspect-video bg-zinc-800 rounded overflow-hidden relative shadow-lg">
-                                          <img src={anime.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
-                                          <div className="absolute inset-0 flex items-center justify-center">
-                                              <Play className={`w-8 h-8 ${isNext ? 'text-brand-400 fill-brand-400' : 'text-white/50 fill-white/50 group-hover:text-white'}`} />
-                                          </div>
-                                          {ep.isFiller && <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-red-500 text-[8px] font-bold text-white rounded-sm uppercase tracking-wider">Filler</div>}
-                                      </div>
-                                      
-                                      <div className="flex flex-col justify-center min-w-0 flex-1">
-                                          <div className="flex items-start justify-between gap-2">
-                                              <h4 className={`text-sm md:text-base font-bold line-clamp-1 ${isNext ? 'text-brand-400' : 'text-zinc-200 group-hover:text-white'}`}>
-                                                  {ep.number}. {ep.title || `Episode ${ep.number}`}
-                                              </h4>
-                                          </div>
-                                          <p className="text-[10px] md:text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
-                                              {(anime.description || "").slice(0, 100)}...
-                                          </p>
-                                          <div className="mt-2 flex items-center gap-2">
-                                              <span className="text-[9px] font-mono text-zinc-600 bg-black/50 px-1.5 py-0.5 rounded border border-white/5">24m</span>
-                                          </div>
-                                      </div>
-                                  </Link>
-                              )
-                          })}
-                      </div>
-                  </div>
-              ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                      {[...(anime.relatedAnime || []), ...(anime.recommendations || [])].map(rel => (
-                          <AnimeCard key={rel.id} anime={rel} layout="grid" />
-                      ))}
-                  </div>
-              )}
+                               {/* List */}
+                               <div className="flex flex-col gap-3">
+                                   {episodes.map(ep => {
+                                       const isNext = nextEp?.id === ep.id;
+                                       return (
+                                           <Link 
+                                             key={ep.id} 
+                                             to={`/watch/${encodeURIComponent(ep.id)}`}
+                                             className={`flex gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors group ${isNext ? 'bg-brand-400/10 border border-brand-400/20' : 'bg-zinc-900/30 border border-transparent'}`}
+                                           >
+                                               {/* Thumbnail */}
+                                               <div className="w-32 md:w-40 aspect-video bg-zinc-800 rounded overflow-hidden relative shadow-lg flex-shrink-0">
+                                                   <img src={anime.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
+                                                   <div className="absolute inset-0 flex items-center justify-center">
+                                                       <Play className={`w-8 h-8 ${isNext ? 'text-brand-400 fill-brand-400' : 'text-white/50 fill-white/50 group-hover:text-white'}`} />
+                                                   </div>
+                                                   {ep.isFiller && <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-red-500 text-[8px] font-bold text-white rounded-sm uppercase tracking-wider">Filler</div>}
+                                               </div>
+                                               
+                                               <div className="flex flex-col justify-center min-w-0 flex-1">
+                                                   <div className="flex items-start justify-between gap-2">
+                                                       <h4 className={`text-sm md:text-base font-bold line-clamp-1 ${isNext ? 'text-brand-400' : 'text-zinc-200 group-hover:text-white'}`}>
+                                                           {ep.number}. {ep.title || `Episode ${ep.number}`}
+                                                       </h4>
+                                                   </div>
+                                                   <p className="text-[10px] md:text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
+                                                       {(anime.description || "").slice(0, 100)}...
+                                                   </p>
+                                                   <div className="mt-2 flex items-center gap-2">
+                                                       <span className="text-[9px] font-mono text-zinc-600 bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5">24m</span>
+                                                   </div>
+                                               </div>
+                                           </Link>
+                                       )
+                                   })}
+                               </div>
+                           </div>
+                       ) : (
+                           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                               {[...(anime.relatedAnime || []), ...(anime.recommendations || [])].map(rel => (
+                                   <AnimeCard key={rel.id} anime={rel} layout="grid" />
+                               ))}
+                           </div>
+                       )}
+                   </div>
+               </div>
           </div>
       </div>
 
-      {/* 6. Sticky Bottom Action Bar */}
+      {/* 
+        3. Sticky Bottom Action Bar
+        This remains fixed at the bottom regardless of scroll.
+      */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/10 p-4 z-50 pb-[env(safe-area-inset-bottom)]">
           <div className="max-w-7xl mx-auto flex items-center gap-4">
               <Link 
