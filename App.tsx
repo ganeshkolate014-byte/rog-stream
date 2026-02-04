@@ -16,7 +16,6 @@ import { Benefits } from './pages/Benefits';
 import { Profile } from './pages/Profile';
 import { Documentation } from './pages/Documentation';
 import { ApiDocs } from './pages/ApiDocs'; 
-import { Apis } from './pages/Apis';
 import { Trackpad } from './components/Trackpad';
 import { AuthProvider } from './context/AuthContext';
 
@@ -47,7 +46,6 @@ const AppRoutes = () => {
                 <Route path="/benefits" element={<Benefits />} />
                 <Route path="/documentation" element={<Documentation />} />
                 <Route path="/api-docs" element={<ApiDocs />} />
-                <Route path="/apis" element={<Apis />} />
                 <Route path="/anime/:id" element={<AnimeDetail />} />
                 <Route path="/watch/:episodeId" element={<Watch />} />
                 <Route path="/schedule" element={<Schedule />} />
