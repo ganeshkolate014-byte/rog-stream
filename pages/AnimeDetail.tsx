@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApi, constructUrl } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
@@ -8,11 +8,7 @@ import {
   Plus, 
   Check, 
   ChevronDown, 
-  ChevronUp, 
   Star, 
-  ChevronLeft, 
-  MoreVertical, 
-  Cast, 
   Download,
   Bookmark
 } from 'lucide-react';
@@ -20,7 +16,7 @@ import { DetailSkeleton } from '../components/Skeletons';
 import { AnimeCard } from '../components/AnimeCard';
 import { useAuth } from '../context/AuthContext';
 import { getUserProgress, UserProgress, addToWatchlist, removeUserProgress } from '../services/firebase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export const AnimeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,19 +31,9 @@ export const AnimeDetail: React.FC = () => {
   // Interaction States
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [activeTab, setActiveTab] = useState<'episodes' | 'related'>('episodes');
-  const [isScrolled, setIsScrolled] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [malData, setMalData] = useState<{ score: number | null; scored_by: number | null } | null>(null);
-
-  // Detect Scroll for Navbar
-  useEffect(() => {
-    const handleScroll = () => {
-        setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Fetch User Progress
   useEffect(() => {
@@ -162,18 +148,9 @@ export const AnimeDetail: React.FC = () => {
   const heroImage = anime.banner || anime.image;
   const episodes = anime.episodes || [];
   
-  // Logic for "Start Watching" button
   const currentEpNumber = userProgress?.currentEpisode || 0;
-  // If we haven't started (0), watch ep 1. If we have, watch current + 1 (next) or current if completed/caught up logic isn't perfect
-  // For simplicity: If 0, start at 1. If >0, try to find next.
   let nextEp = episodes.find(e => e.number === currentEpNumber + 1);
   if (!nextEp && episodes.length > 0) nextEp = episodes[0]; // Fallback to Ep 1
-  
-  // If we completed the last episode available, just show the last one? 
-  // Or if we are in the middle of an episode? UserProgress stores 'currentEpisode' as the last one COMPLETED usually or watched.
-  // Let's assume userProgress.currentEpisode is the last one they finished. So we want +1.
-  
-  // If nextEp is missing (e.g., watched all), maybe fallback to the first one or stay on last.
   if (!nextEp && episodes.length > 0) nextEp = episodes[episodes.length - 1];
 
   const watchLink = nextEp ? `/watch/${encodeURIComponent(nextEp.id)}` : '#';
@@ -182,140 +159,125 @@ export const AnimeDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white pb-24 font-sans selection:bg-brand-500 selection:text-white">
       
-      {/* 1. Navbar Overlay (Fixed) */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/90 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
-         <div className="flex items-center justify-between px-4 h-14 md:h-16 max-w-7xl mx-auto">
-             <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
-                 <ChevronLeft className="w-6 h-6 text-white" />
-             </button>
-             <div className="flex items-center gap-4">
-                 <button className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                     <Cast className="w-5 h-5 text-white" />
-                 </button>
-                 <button className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors">
-                     <MoreVertical className="w-5 h-5 text-white" />
-                 </button>
-             </div>
-         </div>
-      </div>
-
-      {/* 2. Hero Section */}
-      <div className="relative w-full aspect-[16/10] md:aspect-[21/9] lg:h-[60vh] overflow-hidden">
+      {/* 2. Hero Section - Increased height and adjusted gradient for "Full" look */}
+      <div className="relative w-full h-[50vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
           {/* Background Image */}
           <div className="absolute inset-0">
-             <img src={heroImage} alt={anime.title} className="w-full h-full object-cover" />
+             <img 
+                src={heroImage} 
+                alt={anime.title} 
+                className="w-full h-full object-cover object-top" 
+             />
           </div>
           
-          {/* Gradient Overlay - Crucial for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          {/* Soft Gradient Overlay - Adjusted to be minimal at top */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 -mt-20 md:-mt-32 relative z-10">
           
           {/* 3. Centered Info Header */}
           <div className="flex flex-col items-center text-center">
               
-              {/* Title */}
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-2xl md:text-4xl lg:text-5xl font-bold uppercase font-display tracking-tight leading-none mb-1 text-balance"
-              >
+              {/* Title - No Animation */}
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase font-display tracking-tight leading-none mb-2 text-balance drop-shadow-xl">
                   {anime.title}
-              </motion.h1>
+              </h1>
               
               {/* Subtitle / JP Title */}
               {anime.japaneseTitle && (
-                  <p className="text-zinc-400 text-xs md:text-sm font-medium mb-3">{anime.japaneseTitle}</p>
+                  <p className="text-zinc-300 text-xs md:text-sm font-medium mb-4 drop-shadow-md">{anime.japaneseTitle}</p>
               )}
 
               {/* Metadata Line */}
-              <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] md:text-xs font-medium text-zinc-400 mb-3">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] md:text-xs font-bold text-zinc-300 mb-4 uppercase tracking-wider">
                   {/* Dub/Sub Badges */}
                   <div className="flex items-center gap-1">
-                      {anime.hasDub && <span className="bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded-[2px]">Dub</span>}
-                      {anime.hasSub && <span className="bg-zinc-800 text-zinc-300 px-1 py-0.5 rounded-[2px] ml-0.5">Sub</span>}
+                      {anime.hasDub && <span className="bg-white text-black px-1.5 py-0.5 rounded-[2px]">DUB</span>}
+                      {anime.hasSub && <span className="bg-zinc-800 text-white border border-white/20 px-1.5 py-0.5 rounded-[2px] ml-0.5">SUB</span>}
                   </div>
-                  <span>•</span>
+                  <span className="opacity-50">•</span>
                   {/* Genres */}
-                  <span className="uppercase tracking-wide">
+                  <span>
                       {anime.genres?.slice(0, 3).join(', ')}
                   </span>
               </div>
 
               {/* Rating Row */}
-              <div className="flex items-center gap-1.5 mb-6">
+              <div className="flex items-center gap-2 mb-8 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
                   <div className="flex text-brand-400">
-                      {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                      ))}
+                      <Star className="w-4 h-4 fill-current" />
                   </div>
-                  <span className="text-xs font-bold text-zinc-300">
+                  <span className="text-sm font-black text-white">
                       {malData?.score || anime.malScore || "4.8"}
                   </span>
-                  <span className="text-[10px] text-zinc-500">
+                  <span className="text-xs text-zinc-400 font-bold">
                       ({malData?.scored_by ? formatNumber(malData.scored_by) : "12k"})
                   </span>
-                  <ChevronDown className="w-3 h-3 text-zinc-600" />
               </div>
 
               {/* Action Buttons Row */}
-              <div className="flex items-center gap-12 md:gap-20 mb-6">
+              <div className="flex items-center gap-12 md:gap-20 mb-8">
                   <button 
                     onClick={handleToggleList}
-                    className="flex flex-col items-center gap-1 group"
+                    className="flex flex-col items-center gap-2 group"
                   >
-                      {userProgress ? (
-                          <Check className="w-6 h-6 text-brand-400" />
-                      ) : (
-                          <Plus className="w-6 h-6 text-white group-hover:text-brand-400 transition-colors" />
-                      )}
+                      <div className={`p-3 rounded-full border-2 transition-all ${userProgress ? 'bg-brand-400 border-brand-400' : 'bg-black/50 border-white/30 group-hover:border-brand-400'}`}>
+                        {userProgress ? (
+                            <Check className="w-5 h-5 text-black" />
+                        ) : (
+                            <Plus className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
+                        )}
+                      </div>
                       <span className={`text-[10px] font-bold uppercase tracking-wider ${userProgress ? 'text-brand-400' : 'text-zinc-400 group-hover:text-white'}`}>
                           {userProgress ? 'Saved' : 'My List'}
                       </span>
                   </button>
                   
-                  <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
-                      <Share2 className="w-6 h-6 text-white group-hover:text-brand-400 transition-colors" />
+                  <button onClick={handleShare} className="flex flex-col items-center gap-2 group">
+                      <div className="p-3 rounded-full bg-black/50 border-2 border-white/30 group-hover:border-brand-400 transition-all">
+                        <Share2 className="w-5 h-5 text-white group-hover:text-brand-400 transition-colors" />
+                      </div>
                       <span className="text-[10px] font-bold text-zinc-400 group-hover:text-white uppercase tracking-wider">Share</span>
                   </button>
               </div>
 
-              {/* Description (Collapsible) */}
-              <div className="w-full max-w-2xl mb-8">
-                  <motion.div 
-                    initial={false}
-                    animate={{ height: showFullDesc ? 'auto' : '42px' }}
-                    className="overflow-hidden relative text-xs md:text-sm text-zinc-300 leading-relaxed text-center"
+              {/* Description (Collapsible) - No Animation */}
+              <div className="w-full max-w-2xl mb-10">
+                  <div 
+                    className={`overflow-hidden relative text-xs md:text-sm text-zinc-300 leading-relaxed text-center transition-[height] duration-300 ease-in-out ${showFullDesc ? 'h-auto' : 'h-[60px]'}`}
                   >
                       {anime.description}
-                  </motion.div>
+                      {!showFullDesc && (
+                          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black to-transparent" />
+                      )}
+                  </div>
                   <button 
                     onClick={() => setShowFullDesc(!showFullDesc)}
-                    className="text-[10px] font-bold text-zinc-500 uppercase mt-1 hover:text-white transition-colors"
+                    className="flex items-center gap-1 mx-auto text-[10px] font-bold text-zinc-500 uppercase mt-2 hover:text-white transition-colors"
                   >
-                      {showFullDesc ? 'Less Details' : 'More Details'}
+                      {showFullDesc ? 'Show Less' : 'Show More'} <ChevronDown className={`w-3 h-3 transition-transform ${showFullDesc ? 'rotate-180' : ''}`} />
                   </button>
               </div>
 
           </div>
 
           {/* 4. Tabs Section */}
-          <div className="border-b border-white/10 mb-4 sticky top-14 md:top-16 bg-black z-40">
-              <div className="flex items-center gap-8">
+          <div className="border-b border-white/10 mb-6 sticky top-14 md:top-20 bg-black z-40">
+              <div className="flex items-center justify-center gap-12">
                   <button 
                     onClick={() => setActiveTab('episodes')}
-                    className={`py-3 text-sm font-bold uppercase tracking-wider relative ${activeTab === 'episodes' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
+                    className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'episodes' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
                   >
                       Episodes
-                      {activeTab === 'episodes' && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
+                      {activeTab === 'episodes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
                   </button>
                   <button 
                     onClick={() => setActiveTab('related')}
-                    className={`py-3 text-sm font-bold uppercase tracking-wider relative ${activeTab === 'related' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
+                    className={`py-4 text-sm font-black uppercase tracking-widest relative transition-colors ${activeTab === 'related' ? 'text-brand-400' : 'text-zinc-500 hover:text-white'}`}
                   >
-                      More Like This
-                      {activeTab === 'related' && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
+                      Related
+                      {activeTab === 'related' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400" />}
                   </button>
               </div>
           </div>
@@ -324,41 +286,42 @@ export const AnimeDetail: React.FC = () => {
           <div className="min-h-[400px]">
               {activeTab === 'episodes' ? (
                   <div className="space-y-4">
-                      {/* Season Selector (Mock) */}
-                      <div className="flex items-center justify-between text-xs font-bold text-white uppercase tracking-wider px-1">
-                          <span>{episodes.length} Episodes</span>
-                          <button className="flex items-center gap-1 text-zinc-400 hover:text-white">
-                              Sort <ChevronDown className="w-3 h-3" />
-                          </button>
+                      {/* Season Selector */}
+                      <div className="flex items-center justify-between text-xs font-bold text-zinc-400 uppercase tracking-wider px-2 mb-2">
+                          <span>{episodes.length} Episodes Available</span>
                       </div>
 
                       {/* List */}
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-3">
                           {episodes.map(ep => {
                               const isNext = nextEp?.id === ep.id;
                               return (
                                   <Link 
                                     key={ep.id} 
                                     to={`/watch/${encodeURIComponent(ep.id)}`}
-                                    className={`flex gap-3 p-2 rounded hover:bg-white/5 transition-colors group ${isNext ? 'bg-white/5 border border-brand-400/20' : ''}`}
+                                    className={`flex gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors group ${isNext ? 'bg-brand-400/10 border border-brand-400/20' : 'bg-zinc-900/30 border border-transparent'}`}
                                   >
                                       {/* Thumbnail Placeholder */}
-                                      <div className="w-32 aspect-video bg-zinc-800 rounded-sm flex-shrink-0 overflow-hidden relative">
+                                      <div className="w-32 md:w-40 aspect-video bg-zinc-800 rounded overflow-hidden relative shadow-lg">
                                           <img src={anime.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
                                           <div className="absolute inset-0 flex items-center justify-center">
-                                              <Play className={`w-6 h-6 ${isNext ? 'text-brand-400 fill-brand-400' : 'text-white/50 fill-white/50 group-hover:text-white'}`} />
+                                              <Play className={`w-8 h-8 ${isNext ? 'text-brand-400 fill-brand-400' : 'text-white/50 fill-white/50 group-hover:text-white'}`} />
                                           </div>
-                                          <div className="absolute bottom-1 right-1 px-1 bg-black/80 rounded text-[9px] font-bold text-white">24m</div>
+                                          {ep.isFiller && <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-red-500 text-[8px] font-bold text-white rounded-sm uppercase tracking-wider">Filler</div>}
                                       </div>
                                       
-                                      <div className="flex flex-col justify-center min-w-0">
-                                          <h4 className={`text-sm font-bold truncate ${isNext ? 'text-brand-400' : 'text-zinc-300 group-hover:text-white'}`}>
-                                              {ep.number}. {ep.title || `Episode ${ep.number}`}
-                                          </h4>
-                                          <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2">
-                                              {(anime.description || "").slice(0, 60)}...
+                                      <div className="flex flex-col justify-center min-w-0 flex-1">
+                                          <div className="flex items-start justify-between gap-2">
+                                              <h4 className={`text-sm md:text-base font-bold line-clamp-1 ${isNext ? 'text-brand-400' : 'text-zinc-200 group-hover:text-white'}`}>
+                                                  {ep.number}. {ep.title || `Episode ${ep.number}`}
+                                              </h4>
+                                          </div>
+                                          <p className="text-[10px] md:text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
+                                              {(anime.description || "").slice(0, 100)}...
                                           </p>
-                                          {ep.isFiller && <span className="text-[9px] text-red-500 font-bold uppercase mt-1">Filler</span>}
+                                          <div className="mt-2 flex items-center gap-2">
+                                              <span className="text-[9px] font-mono text-zinc-600 bg-black/50 px-1.5 py-0.5 rounded border border-white/5">24m</span>
+                                          </div>
                                       </div>
                                   </Link>
                               )
@@ -376,25 +339,25 @@ export const AnimeDetail: React.FC = () => {
       </div>
 
       {/* 6. Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 p-3 z-50 pb-[env(safe-area-inset-bottom)]">
-          <div className="max-w-7xl mx-auto flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-white/10 p-4 z-50 pb-[env(safe-area-inset-bottom)]">
+          <div className="max-w-7xl mx-auto flex items-center gap-4">
               <Link 
                 to={watchLink}
-                className="flex-1 bg-brand-400 hover:bg-brand-500 text-black font-black uppercase tracking-wider h-11 flex items-center justify-center gap-2 clip-path-polygon transition-colors"
+                className="flex-1 bg-brand-400 hover:bg-white hover:text-black text-black font-black uppercase tracking-widest h-12 flex items-center justify-center gap-3 clip-path-polygon transition-all shadow-[0_0_20px_rgba(255,0,51,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
               >
-                  <Play className="w-4 h-4 fill-black" />
+                  <Play className="w-5 h-5 fill-current" />
                   {buttonText}
               </Link>
               
               <button 
                 onClick={handleToggleList}
-                className="w-11 h-11 flex items-center justify-center border border-zinc-700 bg-zinc-900 text-brand-400 hover:border-brand-400 transition-colors"
+                className="w-12 h-12 flex items-center justify-center border border-zinc-700 bg-zinc-900 text-brand-400 hover:border-brand-400 transition-colors rounded-sm"
               >
-                  {userProgress ? <Check className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                  {userProgress ? <Check className="w-6 h-6" /> : <Bookmark className="w-6 h-6" />}
               </button>
               
-               <button className="w-11 h-11 flex items-center justify-center border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white transition-colors">
-                  <Download className="w-5 h-5" />
+               <button className="w-12 h-12 flex items-center justify-center border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white transition-colors rounded-sm">
+                  <Download className="w-6 h-6" />
               </button>
           </div>
       </div>
